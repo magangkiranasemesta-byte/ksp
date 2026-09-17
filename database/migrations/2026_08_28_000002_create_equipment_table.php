@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void { if(!Schema::hasTable('equipment')) Schema::create('equipment',function(Blueprint $t){$t->id();$t->string('equipment_code',100)->unique();$t->string('name');$t->string('location');$t->text('description')->nullable();$t->string('status',30)->default('ACTIVE');$t->timestamps();}); else Schema::table('equipment',function(Blueprint $t){if(!Schema::hasColumn('equipment','created_at'))$t->timestamps();}); } public function down():void{Schema::dropIfExists('equipment');} };

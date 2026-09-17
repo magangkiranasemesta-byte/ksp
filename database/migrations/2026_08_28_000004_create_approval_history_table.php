@@ -1,0 +1,3 @@
+<?php
+use Illuminate\Database\Migrations\Migration; use Illuminate\Database\Schema\Blueprint; use Illuminate\Support\Facades\Schema;
+return new class extends Migration { public function up(): void { if(!Schema::hasTable('approval_history')) Schema::create('approval_history',function(Blueprint $t){$t->id();$t->foreignId('maintenance_id')->constrained('maintenance_requests')->cascadeOnDelete();$t->foreignId('user_id')->constrained('users')->restrictOnDelete();$t->string('role',30);$t->string('action',30);$t->text('note')->nullable();$t->timestamp('created_at')->useCurrent();}); } public function down():void{Schema::dropIfExists('approval_history');} };
