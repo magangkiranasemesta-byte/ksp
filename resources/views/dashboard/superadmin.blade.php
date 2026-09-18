@@ -1,4 +1,3 @@
-```blade
 @extends('layouts.app')
 
 @section('title', 'Superadmin Dashboard')
@@ -322,4 +321,3 @@
 </div>
 
 @endsection
-```
