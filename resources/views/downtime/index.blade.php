@@ -1,268 +1,106 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+@extends('layouts.app')
 
-    <title>Equipment Downtime - Maintenance X</title>
+@section('title', 'Downtime Equipment')
 
-    <style>
-        * {
-            box-sizing: border-box;
-        }
+@section('content')
 
-        body {
-            margin: 0;
-            font-family: Arial, Helvetica, sans-serif;
-            background: #f5f7fb;
-            color: #1f2937;
-        }
-
-        .container {
-            width: 95%;
-            max-width: 1400px;
-            margin: 30px auto;
-        }
-
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            gap: 20px;
-            margin-bottom: 25px;
-        }
-
-        .title h1 {
-            margin: 0 0 8px;
-            font-size: 28px;
-        }
-
-        .title p {
-            margin: 0;
-            color: #6b7280;
-        }
-
-        .btn {
-            display: inline-block;
-            padding: 11px 18px;
-            border-radius: 8px;
-            text-decoration: none;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            font-weight: 600;
-        }
-
-        .btn-primary {
-            background: #2563eb;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #1d4ed8;
-        }
-
-        .btn-success {
-            background: #16a34a;
-            color: white;
-        }
-
-        .btn-success:hover {
-            background: #15803d;
-        }
-
-        .btn-secondary {
-            background: #6b7280;
-            color: white;
-        }
-
-        .card {
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 3px 15px rgba(0, 0, 0, 0.07);
-            overflow: hidden;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        th {
-            background: #f9fafb;
-            padding: 15px;
-            text-align: left;
-            font-size: 13px;
-            color: #4b5563;
-            border-bottom: 1px solid #e5e7eb;
-            white-space: nowrap;
-        }
-
-        td {
-            padding: 15px;
-            border-bottom: 1px solid #e5e7eb;
-            font-size: 14px;
-            vertical-align: middle;
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover {
-            background: #fafafa;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 6px 10px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 700;
-        }
-
-        .badge-ongoing {
-            background: #fef3c7;
-            color: #92400e;
-        }
-
-        .badge-completed {
-            background: #dcfce7;
-            color: #166534;
-        }
-
-        .empty {
-            text-align: center;
-            padding: 50px 20px;
-            color: #6b7280;
-        }
-
-        .alert {
-            padding: 14px 18px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-        }
-
-        .alert-success {
-            background: #dcfce7;
-            color: #166534;
-            border: 1px solid #bbf7d0;
-        }
-
-        .alert-error {
-            background: #fee2e2;
-            color: #991b1b;
-            border: 1px solid #fecaca;
-        }
-
-        .error-list {
-            margin: 0;
-            padding-left: 20px;
-        }
-
-        .action-form {
-            display: inline;
-        }
-
-        .action-form button {
-            border: none;
-            cursor: pointer;
-        }
-
-        .pagination {
-            padding: 20px;
-        }
-
-        .pagination nav {
-            display: flex;
-            justify-content: center;
-        }
-
-        @media (max-width: 768px) {
-            .header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .title h1 {
-                font-size: 23px;
-            }
-
-            .btn-primary {
-                width: 100%;
-                text-align: center;
-            }
-        }
-    </style>
-</head>
-
-<body>
-
-<div class="container">
+<div class="downtime-page">
 
     {{-- HEADER --}}
-    <div class="header">
+    <div class="downtime-header">
 
-        <div class="title">
-            <h1>Equipment Downtime</h1>
+        <div class="downtime-header-left">
 
-            <p>
-                Catat dan pantau waktu equipment tidak dapat digunakan.
-            </p>
+            <a href="{{ url()->previous() }}" class="btn-back">
+                ←
+                <span>Back</span>
+            </a>
+
+            <div>
+                <h1>Downtime Equipment</h1>
+                <p>
+                    Monitor and manage equipment downtime records.
+                </p>
+            </div>
+
         </div>
 
-        <a href="{{ route('downtime.create') }}"
-           class="btn btn-primary">
-            + Mulai Downtime
+        <a href="{{ route('downtime.create') }}" class="btn-primary">
+            + Add Downtime
         </a>
 
     </div>
 
 
-    {{-- SUCCESS MESSAGE --}}
-    @if(session('success'))
-        <div class="alert alert-success">
-            {{ session('success') }}
+    {{-- SUMMARY --}}
+    <div class="downtime-summary">
+
+        <div class="downtime-summary-card">
+            <div>
+                <span>Total Downtime</span>
+                <strong>{{ $downtimes->count() }}</strong>
+            </div>
         </div>
-    @endif
 
-
-    {{-- ERROR MESSAGE --}}
-    @if(session('error'))
-        <div class="alert alert-error">
-            {{ session('error') }}
+        <div class="downtime-summary-card">
+            <div>
+                <span>Affected Equipment</span>
+                <strong>
+                    {{ $downtimes->unique('equipment_id')->count() }}
+                </strong>
+            </div>
         </div>
-    @endif
+
+        <div class="downtime-summary-card">
+            <div>
+                <span>Active Downtime</span>
+                <strong>
+                    {{ $downtimes->where('status', 'ACTIVE')->count() }}
+                </strong>
+            </div>
+        </div>
+
+    </div>
 
 
-    {{-- VALIDATION ERROR --}}
-    @if($errors->any())
-        <div class="alert alert-error">
+    {{-- TABLE CARD --}}
+    <div class="downtime-card">
 
-            <ul class="error-list">
+        <div class="downtime-card-header">
 
-                @foreach($errors->all() as $error)
+            <div>
+                <h2>Downtime Records</h2>
+                <p>
+                    List of equipment downtime records.
+                </p>
+            </div>
 
-                    <li>{{ $error }}</li>
+            <div class="downtime-tools">
 
-                @endforeach
+                <input
+                    type="text"
+                    id="downtimeSearch"
+                    class="downtime-search"
+                    placeholder="Search equipment..."
+                >
 
-            </ul>
+                <select
+                    id="statusFilter"
+                    class="downtime-filter"
+                >
+                    <option value="">All Status</option>
+                    <option value="ACTIVE">Active</option>
+                    <option value="COMPLETED">Completed</option>
+                </select>
+
+            </div>
 
         </div>
-    @endif
 
-
-    {{-- TABLE --}}
-    <div class="card">
 
         <div class="table-wrapper">
 
-            <table>
+            <table class="downtime-table">
 
                 <thead>
 
@@ -270,195 +108,156 @@
 
                         <th>No</th>
 
-                        <th>Equipment</th>
+                        <th>
+                            Equipment
+                            <button
+                                type="button"
+                                class="sort-btn"
+                                data-sort="equipment"
+                            >
+                                ↕
+                            </button>
+                        </th>
 
-                        <th>Mulai Downtime</th>
+                        <th>Start</th>
 
-                        <th>Selesai</th>
+                        <th>End</th>
 
-                        <th>Durasi</th>
+                        <th>Duration</th>
 
-                        <th>Alasan</th>
+                        <th>Reason</th>
 
                         <th>Status</th>
 
-                        <th>Dibuat Oleh</th>
-
-                        <th>Aksi</th>
+                        <th>Action</th>
 
                     </tr>
 
                 </thead>
 
-                <tbody>
+                <tbody id="downtimeTableBody">
 
-                @forelse($downtimes as $downtime)
+                    @forelse($downtimes as $downtime)
 
-                    <tr>
+                        <tr
+                            data-status="{{ $downtime->status }}"
+                            data-search="{{ strtolower(
+                                ($downtime->equipment->equipment_code ?? '') .
+                                ' ' .
+                                ($downtime->equipment->name ?? '') .
+                                ' ' .
+                                ($downtime->reason ?? '')
+                            ) }}"
+                        >
 
-                        {{-- NOMOR --}}
-                        <td>
-                            {{ $downtimes->firstItem() + $loop->index }}
-                        </td>
+                            <td>
+                                {{ $loop->iteration }}
+                            </td>
 
+                            <td>
 
-                        {{-- EQUIPMENT --}}
-                        <td>
+                                <div class="equipment-info">
 
-                            <strong>
-                                {{ $downtime->equipment->name ?? 'Equipment #' . $downtime->equipment_id }}
-                            </strong>
+                                    <strong>
+                                        {{ $downtime->equipment->equipment_code ?? '-' }}
+                                    </strong>
 
-                        </td>
+                                    <span>
+                                        {{ $downtime->equipment->name ?? '-' }}
+                                    </span>
 
+                                </div>
 
-                        {{-- START --}}
-                        <td>
+                            </td>
 
-                            {{ $downtime->started_at
-                                ? $downtime->started_at->format('d/m/Y H:i')
-                                : '-' }}
+                            <td>
+                                {{ $downtime->start_time
+                                    ? \Carbon\Carbon::parse($downtime->start_time)->format('d M Y H:i')
+                                    : '-'
+                                }}
+                            </td>
 
-                        </td>
+                            <td>
+                                {{ $downtime->end_time
+                                    ? \Carbon\Carbon::parse($downtime->end_time)->format('d M Y H:i')
+                                    : '-'
+                                }}
+                            </td>
 
+                            <td>
+                                {{ $downtime->duration ?? '-' }}
+                            </td>
 
-                        {{-- END --}}
-                        <td>
+                            <td>
+                                {{ $downtime->reason ?? '-' }}
+                            </td>
 
-                            @if($downtime->ended_at)
+                            <td>
 
-                                {{ $downtime->ended_at->format('d/m/Y H:i') }}
-
-                            @else
-
-                                -
-
-                            @endif
-
-                        </td>
-
-
-                        {{-- DURATION --}}
-                        <td>
-
-                            <strong>
-                                {{ $downtime->duration }}
-                            </strong>
-
-                        </td>
-
-
-                        {{-- REASON --}}
-                        <td>
-
-                            {{ $downtime->reason }}
-
-                            @if($downtime->description)
-
-                                <br>
-
-                                <small style="color:#6b7280;">
-                                    {{ $downtime->description }}
-                                </small>
-
-                            @endif
-
-                        </td>
-
-
-                        {{-- STATUS --}}
-                        <td>
-
-                            @if($downtime->status === 'ONGOING')
-
-                                <span class="badge badge-ongoing">
-                                    ONGOING
-                                </span>
-
-                            @else
-
-                                <span class="badge badge-completed">
-                                    COMPLETED
-                                </span>
-
-                            @endif
-
-                        </td>
-
-
-                        {{-- CREATED BY --}}
-                        <td>
-
-                            {{ $downtime->creator->username ?? '-' }}
-
-                        </td>
-
-
-                        {{-- ACTION --}}
-                        <td>
-
-                            @if($downtime->status === 'ONGOING')
-
-                                <form
-                                    action="{{ route('downtime.complete', $downtime->id) }}"
-                                    method="POST"
-                                    class="action-form"
-                                    onsubmit="return confirm('Apakah downtime ini sudah selesai?')"
+                                <span
+                                    class="status-badge status-{{ strtolower($downtime->status) }}"
                                 >
-
-                                    @csrf
-
-                                    @method('PATCH')
-
-                                    <button
-                                        type="submit"
-                                        class="btn btn-success"
-                                    >
-                                        Selesaikan
-                                    </button>
-
-                                </form>
-
-                            @else
-
-                                <span style="color:#9ca3af;">
-                                    Selesai
+                                    {{ $downtime->status }}
                                 </span>
 
-                            @endif
+                            </td>
 
-                        </td>
+                            <td>
 
-                    </tr>
+                                <div class="table-actions">
 
-                @empty
+                                    <a
+                                        href="{{ route('downtime.show', $downtime->id) }}"
+                                        class="action-btn action-view"
+                                    >
+                                        View
+                                    </a>
 
-                    <tr>
+                                    <a
+                                        href="{{ route('downtime.edit', $downtime->id) }}"
+                                        class="action-btn action-edit"
+                                    >
+                                        Edit
+                                    </a>
 
-                        <td colspan="9">
+                                    <form
+                                        action="{{ route('downtime.destroy', $downtime->id) }}"
+                                        method="POST"
+                                        class="delete-form"
+                                    >
 
-                            <div class="empty">
+                                        @csrf
+                                        @method('DELETE')
 
-                                <h3>Belum ada data downtime</h3>
+                                        <button
+                                            type="submit"
+                                            class="action-btn action-delete"
+                                        >
+                                            Delete
+                                        </button>
 
-                                <p>
-                                    Belum ada equipment yang tercatat mengalami downtime.
-                                </p>
+                                    </form>
 
-                                <a href="{{ route('downtime.create') }}"
-                                   class="btn btn-primary">
+                                </div>
 
-                                    + Mulai Downtime
+                            </td>
 
-                                </a>
+                        </tr>
 
-                            </div>
+                    @empty
 
-                        </td>
+                        <tr>
 
-                    </tr>
+                            <td
+                                colspan="8"
+                                class="empty-state"
+                            >
+                                No downtime records found.
+                            </td>
 
-                @endforelse
+                        </tr>
+
+                    @endforelse
 
                 </tbody>
 
@@ -466,21 +265,25 @@
 
         </div>
 
-
-        {{-- PAGINATION --}}
-        @if($downtimes->hasPages())
-
-            <div class="pagination">
-
-                {{ $downtimes->links() }}
-
-            </div>
-
-        @endif
-
     </div>
 
 </div>
 
-</body>
-</html>
+@endsection
+
+
+@push('styles')
+
+<link
+    rel="stylesheet"
+    href="{{ asset('css/downtime.css') }}"
+>
+
+@endpush
+
+
+@push('scripts')
+
+<script src="{{ asset('js/downtime.js') }}"></script>
+
+@endpush

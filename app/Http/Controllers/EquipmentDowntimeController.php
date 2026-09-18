@@ -18,7 +18,25 @@ class EquipmentDowntimeController extends Controller
         ->latest()
         ->paginate(10);
 
-        return view('downtime.index', compact('downtimes'));
+        // Statistik downtime
+        $totalDowntime = EquipmentDowntime::count();
+
+        $ongoingDowntime = EquipmentDowntime::where(
+            'status',
+            'ONGOING'
+        )->count();
+
+        $completedDowntime = EquipmentDowntime::where(
+            'status',
+            'COMPLETED'
+        )->count();
+
+        return view('downtime.index', compact(
+            'downtimes',
+            'totalDowntime',
+            'ongoingDowntime',
+            'completedDowntime'
+        ));
     }
 
     public function create()
