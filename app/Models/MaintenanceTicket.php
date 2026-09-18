@@ -20,12 +20,18 @@ class MaintenanceTicket extends Model
 
     public function reporter()
     {
-        return $this->belongsTo(User::class, 'reported_by');
+        return $this->belongsTo(
+            User::class,
+            'reported_by'
+        );
     }
 
     public function technician()
     {
-        return $this->belongsTo(User::class, 'assigned_to');
+        return $this->belongsTo(
+            User::class,
+            'assigned_to'
+        );
     }
 
     public function logs()
@@ -56,6 +62,17 @@ class MaintenanceTicket extends Model
             'total_price'
         )
         ->withTimestamps();
+    }
+
+    /**
+     * Evidence Gallery.
+     */
+    public function evidences()
+    {
+        return $this->hasMany(
+            MaintenanceEvidence::class,
+            'ticket_id'
+        )->latest();
     }
 
     public function getActivitylogOptions(): LogOptions

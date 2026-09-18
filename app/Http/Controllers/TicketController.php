@@ -267,20 +267,18 @@ class TicketController extends Controller
      * Menampilkan detail tiket beserta riwayat perbaikan & status.
      */
     public function show($id)
-    {
-        $ticket = MaintenanceTicket::with([
-            'device',
-            'reporter',
-            'technician',
-            'logs.technician',
-            'statusHistories.user'
-        ])->findOrFail($id);
+{
+    $ticket = MaintenanceTicket::with([
+        'device',
+        'reporter',
+        'technician',
+        'logs.technician',
+        'statusHistories.user',
+        'evidences.uploader',
+    ])->findOrFail($id);
 
-        return view(
-            'tickets.show',
-            compact('ticket')
-        );
-    }
+    return view('tickets.show', compact('ticket'));
+}
 
     /**
      * Menugaskan teknisi ke tiket tertentu.

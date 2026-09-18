@@ -14,7 +14,8 @@ use App\Http\Controllers\{
     PreventiveMaintenanceController,
     ActivityLogController,
     EquipmentDowntimeController,
-    NotificationController
+    NotificationController,
+    MaintenanceEvidenceController,
 };
 
 /*
@@ -98,7 +99,15 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:tickets')->group(function () {
 
         Route::resource('tickets', TicketController::class);
+        Route::post(
+    '/tickets/{ticket}/evidence',
+    [MaintenanceEvidenceController::class, 'store']
+)->name('tickets.evidence.store');
 
+Route::delete(
+    '/tickets/{ticket}/evidence/{evidence}',
+    [MaintenanceEvidenceController::class, 'destroy']
+)->name('tickets.evidence.destroy');
         Route::prefix('tickets/{ticket}')
             ->name('tickets.')
             ->group(function () {
