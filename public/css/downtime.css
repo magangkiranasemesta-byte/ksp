@@ -702,6 +702,208 @@ RESPONSIVE FORM
 .downtime-form-actions .btn-primary {
     width: 100%;
 }
+
+/* =========================================================
+DOWNTIME DETAIL
+========================================================= */
+
+.downtime-detail-card {
+width: 100%;
+
+
+background: #ffffff;
+
+border: 1px solid #e5e7eb;
+border-radius: 12px;
+
+overflow: hidden;
+
+box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+
+
+}
+
+.downtime-detail-header {
+display: flex;
+
+
+align-items: center;
+justify-content: space-between;
+
+gap: 20px;
+
+padding: 22px 24px;
+
+border-bottom: 1px solid #e5e7eb;
+
+}
+
+.downtime-detail-header h2 {
+margin: 0;
+
+
+color: #111827;
+
+font-size: 18px;
+font-weight: 700;
+
+}
+
+.downtime-detail-header p {
+margin: 5px 0 0;
+
+
+color: #6b7280;
+
+font-size: 13px;
+
+}
+
+.downtime-detail-body {
+padding: 24px;
+}
+
+/* =========================================================
+DETAIL SECTION
+========================================================= */
+
+.detail-section {
+margin-bottom: 28px;
+}
+
+.detail-section h3 {
+margin: 0 0 16px;
+
+
+color: #111827;
+
+font-size: 15px;
+font-weight: 700;
+
+}
+
+/* =========================================================
+DETAIL GRID
+========================================================= */
+
+.detail-grid {
+display: grid;
+
+
+grid-template-columns: repeat(2, 1fr);
+
+gap: 16px;
+
+
+}
+
+.detail-item {
+padding: 16px;
+
+
+background: #f9fafb;
+
+border: 1px solid #e5e7eb;
+
+border-radius: 8px;
+
+}
+
+.detail-label {
+display: block;
+
+margin-bottom: 7px;
+
+color: #6b7280;
+
+font-size: 12px;
+
+}
+
+.detail-value {
+display: block;
+
+
+color: #111827;
+
+font-size: 14px;
+font-weight: 600;
+
+}
+
+/* =========================================================
+DESCRIPTION
+========================================================= */
+
+.description-box {
+min-height: 100px;
+
+padding: 16px;
+
+background: #f9fafb;
+
+border: 1px solid #e5e7eb;
+
+border-radius: 8px;
+
+color: #374151;
+
+font-size: 14px;
+
+line-height: 1.6;
+
+white-space: pre-line;
+
+}
+
+/* =========================================================
+DETAIL ACTION
+========================================================= */
+
+.detail-actions {
+display: flex;
+
+
+align-items: center;
+justify-content: flex-end;
+
+gap: 10px;
+
+padding-top: 20px;
+
+border-top: 1px solid #e5e7eb;
+
+}
+
+/* =========================================================
+RESPONSIVE
+========================================================= */
+
+@media (max-width: 700px) {
+
+
+.downtime-detail-header {
+    align-items: flex-start;
+
+    flex-direction: column;
+}
+
+.detail-grid {
+    grid-template-columns: 1fr;
+}
+
+.detail-actions {
+    flex-direction: column-reverse;
+
+    align-items: stretch;
+}
+
+.detail-actions a {
+    width: 100%;
+}
+
+}
+
 }
 
 
