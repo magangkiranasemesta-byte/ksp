@@ -27,4 +27,11 @@ class MaintenanceRequest extends Model
     public function equipment(): BelongsTo { return $this->belongsTo(Equipment::class, 'equipment_id'); }
     public function engineer(): BelongsTo { return $this->belongsTo(User::class, 'engineer_id'); }
     public function approvals(): HasMany { return $this->hasMany(ApprovalHistory::class, 'maintenance_id'); }
+    public function workOrder()
+    {
+        return $this->hasOne(
+            WorkOrder::class,
+            'maintenance_request_id'
+        );
+    }
 }

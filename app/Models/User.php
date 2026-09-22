@@ -111,4 +111,12 @@ class User extends Authenticatable
             ApprovalHistory::class
         );
     }
+
+    public function workOrders()
+    {
+        return $this->hasMany(
+            WorkOrder::class,
+            'technician_id'
+        );
+    }
 }

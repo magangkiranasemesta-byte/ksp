@@ -16,6 +16,7 @@ use App\Http\Controllers\{
     EquipmentDowntimeController,
     NotificationController,
     MaintenanceEvidenceController,
+    WorkOrderController,
 };
 
 /*
@@ -74,6 +75,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:dashboard')
         ->name('dashboard');
 
+    Route::resource('work-orders', WorkOrderController::class);
 
 
     Route::get(

@@ -7,7 +7,6 @@
 
 <div class="space-y-6">
 
-```
 {{-- HEADER --}}
 <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
 
@@ -539,7 +538,6 @@
     @endif
 
 </div>
-```
 
 </div>
 

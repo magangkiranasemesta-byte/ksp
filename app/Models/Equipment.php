@@ -31,4 +31,11 @@ class Equipment extends Model
     {
         return $this->hasMany(MaintenanceRequest::class, 'equipment_id');
     }
+    public function workOrders(): HasMany
+    {
+        return $this->hasMany(
+            WorkOrder::class,
+            'equipment_id'
+        );
+    }
 }

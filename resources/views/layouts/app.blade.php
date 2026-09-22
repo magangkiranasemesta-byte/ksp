@@ -261,84 +261,149 @@
 
                                 <!-- SUB MENU -->
 
-                                <div
-                                    class="mt-1 ml-3 pl-3
-                                           border-l border-slate-800
-                                           flex flex-col gap-1">
+                                
+                            <div
+                                class="mt-1 ml-3 pl-3
+                                    border-l border-slate-800
+                                    flex flex-col gap-1">
 
+                                <!-- Maintenance Request -->
 
-                                    <!-- Maintenance Request -->
+                                <a
+                                    href="{{ route('maintenance.index') }}"
+                                    class="flex items-center gap-3
+                                        px-3 py-2 rounded-lg
+                                        text-xs font-medium
+                                        transition-all
+                                        {{ request()->routeIs('maintenance.index')
+                                                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
 
-                                    <a
-                                        href="{{ route('maintenance.index') }}"
-                                        class="flex items-center gap-3
-                                               px-3 py-2 rounded-lg
-                                               text-xs font-medium
-                                               transition-all
-                                               {{ request()->routeIs('maintenance.index')
-                                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                                                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+                                    <svg
+                                        class="w-4 h-4 flex-shrink-0"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
 
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a3 3 0 006 0M9 5h6">
+                                        </path>
+
+                                    </svg>
+
+                                    <span>
                                         Maintenance Request
+                                    </span>
 
-                                    </a>
+                                </a>
 
 
+                                <!-- Preventive Maintenance -->
 
-                                    <!-- Preventive Maintenance -->
+                                <a
+                                    href="{{ route('maintenance.preventive.index') }}"
+                                    class="flex items-center gap-3
+                                        px-3 py-2 rounded-lg
+                                        text-xs font-medium
+                                        transition-all
+                                        {{ request()->routeIs('maintenance.preventive.*')
+                                                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
 
-                                    <a
-                                        href="{{ route('maintenance.preventive.index') }}"
-                                        class="flex items-center gap-3
-                                               px-3 py-2 rounded-lg
-                                               text-xs font-medium
-                                               transition-all
-                                               {{ request()->routeIs('maintenance.preventive.*')
-                                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                                                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+                                    <svg
+                                        class="w-4 h-4 flex-shrink-0"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
 
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 6v6l4 2m5-2a9 9 0 11-18 0 9 9 0 0118 0z">
+                                        </path>
+
+                                    </svg>
+
+                                    <span>
                                         Preventive Maintenance
+                                    </span>
 
-                                    </a>
-
-
-
-                                    <!-- Downtime Equipment -->
-
-                                    <a
-                                        href="{{ route('downtime.index') }}"
-                                        class="flex items-center gap-3
-                                               px-3 py-2 rounded-lg
-                                               text-xs font-medium
-                                               transition-all
-                                               {{ request()->routeIs('downtime.*')
-                                                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                                                    : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
+                                </a>
 
 
-                                        <svg
-                                            class="w-4 h-4 flex-shrink-0"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24">
+                                <!-- Work Order -->
 
-                                            <path
-                                                stroke-linecap="round"
-                                                stroke-linejoin="round"
-                                                stroke-width="2"
-                                                d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
-                                            </path>
+                                <a
+                                    href="{{ route('work-orders.index') }}"
+                                    class="flex items-center gap-3
+                                        px-3 py-2 rounded-lg
+                                        text-xs font-medium
+                                        transition-all
+                                        {{ request()->routeIs('work-orders.*')
+                                                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
 
-                                        </svg>
+                                    <svg
+                                        class="w-4 h-4 flex-shrink-0"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7h-2M9 5a3 3 0 006 0M9 5h6M9 13h6m-6 4h4">
+                                        </path>
+
+                                    </svg>
+
+                                    <span>
+                                        Work Order
+                                    </span>
+
+                                </a>
 
 
-                                        <span>
-                                            Downtime Equipment
-                                        </span>
+                                <!-- Downtime Equipment -->
 
-                                    </a>
+                                <a
+                                    href="{{ route('downtime.index') }}"
+                                    class="flex items-center gap-3
+                                        px-3 py-2 rounded-lg
+                                        text-xs font-medium
+                                        transition-all
+                                        {{ request()->routeIs('downtime.*')
+                                                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                                                : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
 
-                                </div>
+                                    <svg
+                                        class="w-4 h-4 flex-shrink-0"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24">
+
+                                        <path
+                                            stroke-linecap="round"
+                                            stroke-linejoin="round"
+                                            stroke-width="2"
+                                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z">
+                                        </path>
+
+                                    </svg>
+
+                                    <span>
+                                        Downtime Equipment
+                                    </span>
+
+                                </a>
+
+                            </div>
+
 
                             </details>
 
