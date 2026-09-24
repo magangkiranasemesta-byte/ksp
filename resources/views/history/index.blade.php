@@ -265,7 +265,7 @@
 
         <form
             method="GET"
-            action="{{ route('history') }}"
+            action="{{ route('history.index') }}"
         >
 
             <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -483,7 +483,7 @@
                 ]))
 
                     <a
-                        href="{{ route('history') }}"
+                        href="{{ route('history.index') }}"
                         class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98]"
                     >
 
