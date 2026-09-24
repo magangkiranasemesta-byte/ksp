@@ -171,6 +171,297 @@
 
     @endif
 
+    {{-- ==========================================
+     WORK ORDER ACTION PANEL
+========================================== --}}
+
+<div class="mb-6 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+
+    <div class="mb-4 flex items-center justify-between">
+        <div>
+            <h2 class="text-lg font-bold text-slate-800">
+                Workflow Work Order
+            </h2>
+
+            <p class="mt-1 text-sm text-slate-500">
+                Kelola proses pengerjaan Work Order sesuai statusnya.
+            </p>
+        </div>
+
+        <span class="rounded-full px-3 py-1 text-xs font-bold
+            @if($workOrder->status === 'OPEN')
+                bg-slate-100 text-slate-700
+            @elseif($workOrder->status === 'ASSIGNED')
+                bg-blue-100 text-blue-700
+            @elseif($workOrder->status === 'IN_PROGRESS')
+                bg-yellow-100 text-yellow-700
+            @elseif($workOrder->status === 'ON_HOLD')
+                bg-orange-100 text-orange-700
+            @elseif($workOrder->status === 'COMPLETED')
+                bg-green-100 text-green-700
+            @elseif($workOrder->status === 'CANCELLED')
+                bg-red-100 text-red-700
+            @endif
+        ">
+            {{ str_replace('_', ' ', $workOrder->status) }}
+        </span>
+    </div>
+
+
+    {{-- OPEN --}}
+    @if($workOrder->status === 'OPEN')
+
+        <div class="rounded-xl border border-blue-100 bg-blue-50 p-4">
+
+            <p class="mb-4 text-sm text-blue-800">
+                Work Order masih OPEN. Pilih Technician/Engineer untuk
+                melanjutkan proses assignment.
+            </p>
+
+            <form
+                action="{{ route('work-orders.assign', $workOrder) }}"
+                method="POST"
+                class="flex flex-col gap-3 sm:flex-row"
+            >
+
+                @csrf
+
+                <select
+                    name="technician_id"
+                    required
+                    class="flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm
+                           focus:border-blue-500 focus:ring-blue-500"
+                >
+
+                    <option value="">
+                        -- Pilih Technician / Engineer --
+                    </option>
+
+                    @foreach($technicians as $technician)
+
+                        <option value="{{ $technician->id }}">
+                            {{ $technician->username }}
+                            ({{ $technician->role }})
+                        </option>
+
+                    @endforeach
+
+                </select>
+
+                <button
+                    type="submit"
+                    class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white
+                           transition hover:bg-blue-700"
+                >
+                    Assign Technician
+                </button>
+
+            </form>
+
+        </div>
+
+    @endif
+
+
+    {{-- ASSIGNED --}}
+    @if($workOrder->status === 'ASSIGNED')
+
+        <div class="flex flex-col gap-4 rounded-xl border border-blue-100 bg-blue-50 p-4 sm:flex-row sm:items-center sm:justify-between">
+
+            <div>
+                <p class="font-semibold text-blue-800">
+                    Work Order sudah di-assign.
+                </p>
+
+                <p class="mt-1 text-sm text-blue-700">
+                    Technician:
+                    <strong>
+                        {{ $workOrder->technician?->username ?? '-' }}
+                    </strong>
+                </p>
+            </div>
+
+            <form
+                action="{{ route('work-orders.start', $workOrder) }}"
+                method="POST"
+            >
+                @csrf
+
+                <button
+                    type="submit"
+                    class="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white
+                           transition hover:bg-green-700"
+                >
+                    ▶ Mulai Pekerjaan
+                </button>
+            </form>
+
+        </div>
+
+    @endif
+
+
+    {{-- IN PROGRESS --}}
+    @if($workOrder->status === 'IN_PROGRESS')
+
+        <div class="rounded-xl border border-yellow-100 bg-yellow-50 p-4">
+
+            <p class="mb-4 font-semibold text-yellow-800">
+                Work Order sedang dikerjakan.
+            </p>
+
+            <div class="flex flex-wrap gap-3">
+
+                <form
+                    action="{{ route('work-orders.hold', $workOrder) }}"
+                    method="POST"
+                >
+                    @csrf
+
+                    <button
+                        type="submit"
+                        class="rounded-xl bg-orange-500 px-5 py-2.5 text-sm font-semibold text-white
+                               transition hover:bg-orange-600"
+                    >
+                        ⏸ Tunda
+                    </button>
+                </form>
+
+
+                <form
+                    action="{{ route('work-orders.complete', $workOrder) }}"
+                    method="POST"
+                    class="flex flex-1 gap-2 sm:flex-none"
+                >
+                    @csrf
+
+                    <input
+                        type="text"
+                        name="completion_notes"
+                        required
+                        placeholder="Catatan penyelesaian..."
+                        class="min-w-0 flex-1 rounded-xl border border-slate-300 px-4 py-2.5 text-sm
+                               focus:border-green-500 focus:ring-green-500 sm:w-72"
+                    >
+
+                    <button
+                        type="submit"
+                        class="rounded-xl bg-green-600 px-5 py-2.5 text-sm font-semibold text-white
+                               transition hover:bg-green-700"
+                    >
+                        ✓ Selesaikan
+                    </button>
+
+                </form>
+
+            </div>
+
+        </div>
+
+    @endif
+
+
+    {{-- ON HOLD --}}
+    @if($workOrder->status === 'ON_HOLD')
+
+        <div class="rounded-xl border border-orange-100 bg-orange-50 p-4">
+
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+
+                <div>
+                    <p class="font-semibold text-orange-800">
+                        Work Order sedang ditunda.
+                    </p>
+
+                    <p class="mt-1 text-sm text-orange-700">
+                        Pekerjaan dapat dilanjutkan kembali.
+                    </p>
+                </div>
+
+                <form
+                    action="{{ route('work-orders.resume', $workOrder) }}"
+                    method="POST"
+                >
+                    @csrf
+
+                    <button
+                        type="submit"
+                        class="rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white
+                               transition hover:bg-blue-700"
+                    >
+                        ▶ Lanjutkan
+                    </button>
+                </form>
+
+            </div>
+
+        </div>
+
+    @endif
+
+
+    {{-- COMPLETED --}}
+    @if($workOrder->status === 'COMPLETED')
+
+        <div class="rounded-xl border border-green-100 bg-green-50 p-4">
+
+            <p class="font-semibold text-green-800">
+                ✓ Work Order telah selesai.
+            </p>
+
+            <p class="mt-1 text-sm text-green-700">
+                Work Order ini sudah tidak memiliki proses aktif.
+            </p>
+
+        </div>
+
+    @endif
+
+
+    {{-- CANCELLED --}}
+    @if($workOrder->status === 'CANCELLED')
+
+        <div class="rounded-xl border border-red-100 bg-red-50 p-4">
+
+            <p class="font-semibold text-red-800">
+                Work Order dibatalkan.
+            </p>
+
+            <p class="mt-1 text-sm text-red-700">
+                Work Order ini sudah tidak dapat diproses kembali.
+            </p>
+
+        </div>
+
+    @endif
+
+
+    {{-- CANCEL BUTTON --}}
+    @if(in_array($workOrder->status, ['OPEN', 'ASSIGNED', 'ON_HOLD']))
+
+        <div class="mt-4 border-t border-slate-100 pt-4">
+
+            <form
+                action="{{ route('work-orders.cancel', $workOrder) }}"
+                method="POST"
+                onsubmit="return confirm('Yakin ingin membatalkan Work Order ini?')"
+            >
+                @csrf
+
+                <button
+                    type="submit"
+                    class="text-sm font-semibold text-red-600 hover:text-red-700"
+                >
+                    Batalkan Work Order
+                </button>
+            </form>
+
+        </div>
+
+    @endif
+
+</div>
+
 
     {{-- =========================================================
         OVERVIEW CARDS

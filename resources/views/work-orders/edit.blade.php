@@ -4,115 +4,116 @@
 
 @section('content')
 
-<div class="min-h-screen bg-slate-100 p-6">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
-    {{-- =========================================================
-        HEADER
-    ========================================================== --}}
+    {{-- ========================================================= --}}
+    {{-- HEADER --}}
+    {{-- ========================================================= --}}
     <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 
-        <div class="flex items-center gap-4">
+        <div>
+            <div class="flex items-center gap-3 mb-2">
 
-            {{-- Back --}}
-            <a href="{{ route('work-orders.show', $workOrder) }}"
-               class="w-10 h-10 rounded-xl
-                      bg-white
-                      border border-slate-200
-                      text-slate-600
-                      flex items-center justify-center
-                      hover:bg-slate-50
-                      hover:text-blue-600
-                      transition"
-               title="Kembali">
+                <a href="{{ route('work-orders.show', $workOrder) }}"
+                   class="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition">
 
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="w-5 h-5"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor"
-                     stroke-width="2">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         class="w-4 h-4"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke="currentColor"
+                         stroke-width="2">
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M15 19l-7-7 7-7"/>
+                    </svg>
 
-                    <path stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M15 19l-7-7 7-7" />
-
-                </svg>
-
-            </a>
-
-
-            <div>
-
-                <div class="flex items-center gap-3">
-
-                    <h1 class="text-2xl font-bold text-slate-800">
-                        Edit Work Order
-                    </h1>
-
-                    <span class="px-3 py-1
-                                 bg-blue-100
-                                 text-blue-700
-                                 rounded-full
-                                 text-xs
-                                 font-semibold">
-
-                        {{ $workOrder->wo_number }}
-
-                    </span>
-
-                </div>
-
-                <p class="text-sm text-slate-500 mt-1">
-                    Perbarui informasi dan status pekerjaan maintenance
-                </p>
+                    Kembali ke Detail
+                </a>
 
             </div>
+
+            <h1 class="text-2xl font-bold text-slate-800">
+                Edit Work Order
+            </h1>
+
+            <p class="text-sm text-slate-500 mt-1">
+                Perbarui informasi Work Order
+                <span class="font-semibold text-slate-700">
+                    {{ $workOrder->wo_number }}
+                </span>
+            </p>
+        </div>
+
+        <div class="flex items-center gap-3">
+
+            {{-- STATUS BADGE --}}
+            @php
+                $statusClasses = [
+                    'OPEN' => 'bg-blue-100 text-blue-700 border-blue-200',
+                    'ASSIGNED' => 'bg-indigo-100 text-indigo-700 border-indigo-200',
+                    'IN_PROGRESS' => 'bg-amber-100 text-amber-700 border-amber-200',
+                    'ON_HOLD' => 'bg-orange-100 text-orange-700 border-orange-200',
+                    'COMPLETED' => 'bg-green-100 text-green-700 border-green-200',
+                    'CANCELLED' => 'bg-red-100 text-red-700 border-red-200',
+                ];
+
+                $statusLabels = [
+                    'OPEN' => 'Open',
+                    'ASSIGNED' => 'Assigned',
+                    'IN_PROGRESS' => 'In Progress',
+                    'ON_HOLD' => 'On Hold',
+                    'COMPLETED' => 'Completed',
+                    'CANCELLED' => 'Cancelled',
+                ];
+
+                $statusClass = $statusClasses[$workOrder->status] ?? 'bg-slate-100 text-slate-700 border-slate-200';
+                $statusLabel = $statusLabels[$workOrder->status] ?? $workOrder->status;
+            @endphp
+
+            <span class="inline-flex items-center px-3 py-2 rounded-lg border text-sm font-semibold {{ $statusClass }}">
+                {{ $statusLabel }}
+            </span>
 
         </div>
 
     </div>
 
 
-    {{-- =========================================================
-        VALIDATION ERROR
-    ========================================================== --}}
-    @if($errors->any())
+    {{-- ========================================================= --}}
+    {{-- VALIDATION ERROR --}}
+    {{-- ========================================================= --}}
+    @if ($errors->any())
 
-        <div class="mb-6
-                    bg-red-50
-                    border border-red-200
-                    rounded-xl
-                    p-4">
+        <div class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4">
 
             <div class="flex items-start gap-3">
 
-                <svg xmlns="http://www.w3.org/2000/svg"
-                     class="w-5 h-5 text-red-600 flex-shrink-0"
-                     fill="none"
-                     viewBox="0 0 24 24"
-                     stroke="currentColor"
-                     stroke-width="2">
+                <div class="flex-shrink-0">
+                    <svg xmlns="http://www.w3.org/2000/svg"
+                         class="w-5 h-5 text-red-600"
+                         fill="none"
+                         viewBox="0 0 24 24"
+                         stroke="currentColor"
+                         stroke-width="2">
 
-                    <path stroke-linecap="round"
-                          stroke-linejoin="round"
-                          d="M12 8v4m0 4h.01M5.07 19h13.86a2 2 0 001.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16a2 2 0 001.73 3z" />
+                        <path stroke-linecap="round"
+                              stroke-linejoin="round"
+                              d="M12 9v2m0 4h.01M10.29 3.86l-7.82 13a2 2 0 001.71 2.64h15.64a2 2 0 001.71-2.64l-7.82-13a2 2 0 00-3.42 0z"/>
 
-                </svg>
+                    </svg>
+                </div>
 
                 <div>
 
-                    <p class="text-sm font-semibold text-red-700">
-                        Terdapat kesalahan pada form.
-                    </p>
+                    <h3 class="font-semibold text-red-800">
+                        Terdapat kesalahan pada form
+                    </h3>
 
-                    <ul class="mt-2 text-sm text-red-600 list-disc list-inside">
+                    <ul class="mt-2 text-sm text-red-700 list-disc list-inside space-y-1">
 
-                        @foreach($errors->all() as $error)
-
-                            <li>
-                                {{ $error }}
-                            </li>
-
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
                         @endforeach
 
                     </ul>
@@ -126,21 +127,17 @@
     @endif
 
 
-    {{-- =========================================================
-        WARNING
-    ========================================================== --}}
-    @if(session('warning'))
+    {{-- ========================================================= --}}
+    {{-- SUCCESS MESSAGE --}}
+    {{-- ========================================================= --}}
+    @if (session('success'))
 
-        <div class="mb-6
-                    bg-amber-50
-                    border border-amber-200
-                    rounded-xl
-                    p-4">
+        <div class="mb-6 rounded-xl border border-green-200 bg-green-50 p-4">
 
-            <div class="flex items-start gap-3">
+            <div class="flex items-center gap-3">
 
                 <svg xmlns="http://www.w3.org/2000/svg"
-                     class="w-5 h-5 text-amber-600 flex-shrink-0"
+                     class="w-5 h-5 text-green-600"
                      fill="none"
                      viewBox="0 0 24 24"
                      stroke="currentColor"
@@ -148,12 +145,12 @@
 
                     <path stroke-linecap="round"
                           stroke-linejoin="round"
-                          d="M12 9v2m0 4h.01M5.07 19h13.86a2 2 0 001.73-3L13.73 4a2 2 0 00-3.46 0L3.34 16a2 2 0 001.73 3z" />
+                          d="M5 13l4 4L19 7"/>
 
                 </svg>
 
-                <p class="text-sm font-medium text-amber-700">
-                    {{ session('warning') }}
+                <p class="text-sm font-medium text-green-800">
+                    {{ session('success') }}
                 </p>
 
             </div>
@@ -163,11 +160,50 @@
     @endif
 
 
-    {{-- =========================================================
-        FORM
-    ========================================================== --}}
-    <form method="POST"
-          action="{{ route('work-orders.update', $workOrder) }}">
+    {{-- ========================================================= --}}
+    {{-- WARNING --}}
+    {{-- ========================================================= --}}
+    <div class="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4">
+
+        <div class="flex items-start gap-3">
+
+            <svg xmlns="http://www.w3.org/2000/svg"
+                 class="w-5 h-5 text-amber-600 mt-0.5"
+                 fill="none"
+                 viewBox="0 0 24 24"
+                 stroke="currentColor"
+                 stroke-width="2">
+
+                <path stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 9v2m0 4h.01M10.29 3.86l-7.82 13a2 2 0 001.71 2.64h15.64a2 2 0 001.71-2.64l-7.82-13a2 2 0 00-3.42 0z"/>
+
+            </svg>
+
+            <div>
+
+                <p class="font-semibold text-amber-800">
+                    Perhatian
+                </p>
+
+                <p class="text-sm text-amber-700 mt-1">
+                    Status Work Order tidak diubah dari halaman ini.
+                    Gunakan tombol workflow pada halaman detail untuk melakukan
+                    Assign, Start, Hold, Resume, Complete, atau Cancel.
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    {{-- ========================================================= --}}
+    {{-- FORM --}}
+    {{-- ========================================================= --}}
+    <form action="{{ route('work-orders.update', $workOrder) }}"
+          method="POST">
 
         @csrf
         @method('PUT')
@@ -176,36 +212,34 @@
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
 
-            {{-- =================================================
-                LEFT
-            ================================================== --}}
+            {{-- ================================================= --}}
+            {{-- LEFT CONTENT --}}
+            {{-- ================================================= --}}
             <div class="lg:col-span-2 space-y-6">
 
 
-                {{-- =============================================
-                    BASIC INFORMATION
-                ============================================== --}}
-                <div class="bg-white rounded-2xl
-                            border border-slate-200
-                            shadow-sm">
+                {{-- ============================================= --}}
+                {{-- BASIC INFORMATION --}}
+                {{-- ============================================= --}}
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200">
 
-                    <div class="px-5 py-4
-                                border-b border-slate-200">
+                    <div class="px-6 py-5 border-b border-slate-200">
 
                         <h2 class="text-lg font-semibold text-slate-800">
                             Informasi Work Order
                         </h2>
 
                         <p class="text-sm text-slate-500 mt-1">
-                            Informasi utama pekerjaan maintenance.
+                            Informasi utama dari Work Order.
                         </p>
 
                     </div>
 
 
-                    <div class="p-5 space-y-5">
+                    <div class="p-6 space-y-5">
 
-                        {{-- WO Number --}}
+
+                        {{-- WO NUMBER --}}
                         <div>
 
                             <label class="block text-sm font-medium text-slate-700 mb-2">
@@ -215,58 +249,45 @@
                             <input type="text"
                                    value="{{ $workOrder->wo_number }}"
                                    readonly
-                                   class="w-full px-4 py-2.5
-                                          bg-slate-100
-                                          border border-slate-200
-                                          rounded-xl
-                                          text-sm
-                                          text-slate-500
-                                          cursor-not-allowed">
+                                   class="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600 cursor-not-allowed">
 
-                            <p class="text-xs text-slate-400 mt-1">
-                                Nomor Work Order tidak dapat diubah.
+                            <p class="text-xs text-slate-500 mt-1">
+                                WO Number tidak dapat diubah.
                             </p>
 
                         </div>
 
 
-                        {{-- Maintenance Request --}}
+                        {{-- MAINTENANCE REQUEST --}}
                         <div>
 
-                            <label class="block text-sm font-medium text-slate-700 mb-2">
+                            <label for="maintenance_request_id"
+                                   class="block text-sm font-medium text-slate-700 mb-2">
+
                                 Maintenance Request
+
                             </label>
 
                             <select name="maintenance_request_id"
                                     id="maintenance_request_id"
-                                    class="w-full px-4 py-2.5
-                                           border border-slate-300
-                                           rounded-xl
-                                           text-sm
-                                           bg-white
-                                           focus:outline-none
-                                           focus:ring-2
-                                           focus:ring-blue-500">
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
 
                                 <option value="">
-                                    -- Tidak terkait Maintenance Request --
+                                    -- Manual Work Order --
                                 </option>
 
-                                @foreach($maintenanceRequests as $maintenanceRequest)
+                                @foreach ($maintenanceRequests as $request)
 
-                                    <option value="{{ $maintenanceRequest->id }}"
-                                            data-equipment="{{ $maintenanceRequest->equipment_id }}"
-                                            data-priority="{{ $maintenanceRequest->priority }}"
-                                            data-description="{{ $maintenanceRequest->description }}"
-                                            {{ old(
-                                                'maintenance_request_id',
-                                                $workOrder->maintenance_request_id
-                                            ) == $maintenanceRequest->id ? 'selected' : '' }}>
+                                    <option value="{{ $request->id }}"
+                                            data-equipment="{{ $request->equipment_id }}"
+                                            data-priority="{{ $request->priority }}"
+                                            data-description="{{ $request->description }}"
+                                            {{ old('maintenance_request_id', $workOrder->maintenance_request_id) == $request->id ? 'selected' : '' }}>
 
-                                        MR #{{ $maintenanceRequest->id }}
+                                        MR #{{ $request->id }}
 
-                                        @if($maintenanceRequest->equipment)
-                                            - {{ $maintenanceRequest->equipment->name }}
+                                        @if ($request->equipment)
+                                            - {{ $request->equipment->name }}
                                         @endif
 
                                     </option>
@@ -275,87 +296,42 @@
 
                             </select>
 
+                            <p class="text-xs text-slate-500 mt-1">
+                                Hanya Maintenance Request yang sudah disetujui yang dapat digunakan.
+                            </p>
+
                         </div>
 
 
-                        {{-- Equipment --}}
+                        {{-- EQUIPMENT --}}
                         <div>
 
-                            <label class="block text-sm font-medium text-slate-700 mb-2">
+                            <label for="equipment_id"
+                                   class="block text-sm font-medium text-slate-700 mb-2">
+
                                 Equipment
                                 <span class="text-red-500">*</span>
+
                             </label>
 
                             <select name="equipment_id"
                                     id="equipment_id"
                                     required
-                                    class="w-full px-4 py-2.5
-                                           border border-slate-300
-                                           rounded-xl
-                                           text-sm
-                                           bg-white
-                                           focus:outline-none
-                                           focus:ring-2
-                                           focus:ring-blue-500">
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
 
                                 <option value="">
                                     -- Pilih Equipment --
                                 </option>
 
-                                @foreach($equipment as $item)
+                                @foreach ($equipment as $item)
 
                                     <option value="{{ $item->id }}"
-                                        {{ old(
-                                            'equipment_id',
-                                            $workOrder->equipment_id
-                                        ) == $item->id ? 'selected' : '' }}>
+                                            {{ old('equipment_id', $workOrder->equipment_id) == $item->id ? 'selected' : '' }}>
 
-                                        {{ $item->equipment_code }}
-                                        -
                                         {{ $item->name }}
 
-                                    </option>
-
-                                @endforeach
-
-                            </select>
-
-                        </div>
-
-
-                        {{-- Technician --}}
-                        <div>
-
-                            <label class="block text-sm font-medium text-slate-700 mb-2">
-                                Technician / Engineer
-                            </label>
-
-                            <select name="technician_id"
-                                    class="w-full px-4 py-2.5
-                                           border border-slate-300
-                                           rounded-xl
-                                           text-sm
-                                           bg-white
-                                           focus:outline-none
-                                           focus:ring-2
-                                           focus:ring-blue-500">
-
-                                <option value="">
-                                    -- Belum ditugaskan --
-                                </option>
-
-                                @foreach($technicians as $technician)
-
-                                    <option value="{{ $technician->id }}"
-                                        {{ old(
-                                            'technician_id',
-                                            $workOrder->technician_id
-                                        ) == $technician->id ? 'selected' : '' }}>
-
-                                        {{ $technician->username }}
-
-                                        @if($technician->role)
-                                            ({{ $technician->role }})
+                                        @if ($item->code)
+                                            - {{ $item->code }}
                                         @endif
 
                                     </option>
@@ -364,115 +340,136 @@
 
                             </select>
 
+                            <p id="equipment-help"
+                               class="text-xs text-slate-500 mt-1">
+
+                                Equipment akan otomatis mengikuti Maintenance Request jika MR dipilih.
+
+                            </p>
+
                         </div>
 
 
-                        {{-- Type + Priority --}}
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                        {{-- TECHNICIAN --}}
+                        <div>
 
-                            {{-- Type --}}
-                            <div>
+                            <label for="technician_id"
+                                   class="block text-sm font-medium text-slate-700 mb-2">
 
-                                <label class="block text-sm font-medium text-slate-700 mb-2">
-                                    Maintenance Type
-                                    <span class="text-red-500">*</span>
-                                </label>
+                                Technician
 
-                                <select name="maintenance_type"
-                                        required
-                                        class="w-full px-4 py-2.5
-                                               border border-slate-300
-                                               rounded-xl
-                                               text-sm
-                                               bg-white
-                                               focus:outline-none
-                                               focus:ring-2
-                                               focus:ring-blue-500">
+                            </label>
 
-                                    <option value="CORRECTIVE"
-                                        {{ old(
-                                            'maintenance_type',
-                                            $workOrder->maintenance_type
-                                        ) === 'CORRECTIVE' ? 'selected' : '' }}>
-                                        Corrective
+                            <select name="technician_id"
+                                    id="technician_id"
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+
+                                <option value="">
+                                    -- Belum Ditentukan --
+                                </option>
+
+                                @foreach ($technicians as $technician)
+
+                                    <option value="{{ $technician->id }}"
+                                            {{ old('technician_id', $workOrder->technician_id) == $technician->id ? 'selected' : '' }}>
+
+                                        {{ $technician->name }}
+
+                                        @if ($technician->role)
+                                            - {{ $technician->role }}
+                                        @endif
+
                                     </option>
 
-                                    <option value="PREVENTIVE"
-                                        {{ old(
-                                            'maintenance_type',
-                                            $workOrder->maintenance_type
-                                        ) === 'PREVENTIVE' ? 'selected' : '' }}>
-                                        Preventive
-                                    </option>
+                                @endforeach
 
-                                    <option value="INSPECTION"
-                                        {{ old(
-                                            'maintenance_type',
-                                            $workOrder->maintenance_type
-                                        ) === 'INSPECTION' ? 'selected' : '' }}>
-                                        Inspection
-                                    </option>
+                            </select>
 
-                                </select>
+                            <p class="text-xs text-slate-500 mt-1">
+                                Technician juga dapat ditentukan melalui proses Assign pada halaman detail.
+                            </p>
 
-                            </div>
+                        </div>
 
 
-                            {{-- Priority --}}
-                            <div>
+                        {{-- MAINTENANCE TYPE --}}
+                        <div>
 
-                                <label class="block text-sm font-medium text-slate-700 mb-2">
-                                    Priority
-                                    <span class="text-red-500">*</span>
-                                </label>
+                            <label for="maintenance_type"
+                                   class="block text-sm font-medium text-slate-700 mb-2">
 
-                                <select name="priority"
-                                        id="priority"
-                                        required
-                                        class="w-full px-4 py-2.5
-                                               border border-slate-300
-                                               rounded-xl
-                                               text-sm
-                                               bg-white
-                                               focus:outline-none
-                                               focus:ring-2
-                                               focus:ring-blue-500">
+                                Maintenance Type
+                                <span class="text-red-500">*</span>
 
-                                    <option value="LOW"
-                                        {{ old(
-                                            'priority',
-                                            $workOrder->priority
-                                        ) === 'LOW' ? 'selected' : '' }}>
-                                        Low
-                                    </option>
+                            </label>
 
-                                    <option value="MEDIUM"
-                                        {{ old(
-                                            'priority',
-                                            $workOrder->priority
-                                        ) === 'MEDIUM' ? 'selected' : '' }}>
-                                        Medium
-                                    </option>
+                            <select name="maintenance_type"
+                                    id="maintenance_type"
+                                    required
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
 
-                                    <option value="HIGH"
-                                        {{ old(
-                                            'priority',
-                                            $workOrder->priority
-                                        ) === 'HIGH' ? 'selected' : '' }}>
-                                        High
-                                    </option>
+                                <option value="CORRECTIVE"
+                                    {{ old('maintenance_type', $workOrder->maintenance_type) === 'CORRECTIVE' ? 'selected' : '' }}>
+                                    Corrective
+                                </option>
 
-                                    <option value="CRITICAL"
-                                        {{ old(
-                                            'priority',
-                                            $workOrder->priority
-                                        ) === 'CRITICAL' ? 'selected' : '' }}>
-                                        Critical
-                                    </option>
+                                <option value="PREVENTIVE"
+                                    {{ old('maintenance_type', $workOrder->maintenance_type) === 'PREVENTIVE' ? 'selected' : '' }}>
+                                    Preventive
+                                </option>
 
-                                </select>
+                                <option value="INSPECTION"
+                                    {{ old('maintenance_type', $workOrder->maintenance_type) === 'INSPECTION' ? 'selected' : '' }}>
+                                    Inspection
+                                </option>
 
-                            </div>
+                                <option value="EMERGENCY"
+                                    {{ old('maintenance_type', $workOrder->maintenance_type) === 'EMERGENCY' ? 'selected' : '' }}>
+                                    Emergency
+                                </option>
+
+                            </select>
+
+                        </div>
+
+
+                        {{-- PRIORITY --}}
+                        <div>
+
+                            <label for="priority"
+                                   class="block text-sm font-medium text-slate-700 mb-2">
+
+                                Priority
+                                <span class="text-red-500">*</span>
+
+                            </label>
+
+                            <select name="priority"
+                                    id="priority"
+                                    required
+                                    class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
+
+                                <option value="LOW"
+                                    {{ old('priority', $workOrder->priority) === 'LOW' ? 'selected' : '' }}>
+                                    Low
+                                </option>
+
+                                <option value="MEDIUM"
+                                    {{ old('priority', $workOrder->priority) === 'MEDIUM' ? 'selected' : '' }}>
+                                    Medium
+                                </option>
+
+                                <option value="HIGH"
+                                    {{ old('priority', $workOrder->priority) === 'HIGH' ? 'selected' : '' }}>
+                                    High
+                                </option>
+
+                                <option value="CRITICAL"
+                                    {{ old('priority', $workOrder->priority) === 'CRITICAL' ? 'selected' : '' }}>
+                                    Critical
+                                </option>
+
+                            </select>
 
                         </div>
 
@@ -481,113 +478,103 @@
                 </div>
 
 
-                {{-- =============================================
-                    PROBLEM & ACTION
-                ============================================== --}}
-                <div class="bg-white rounded-2xl
-                            border border-slate-200
-                            shadow-sm">
+                {{-- ============================================= --}}
+                {{-- PROBLEM & ACTION --}}
+                {{-- ============================================= --}}
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200">
 
-                    <div class="px-5 py-4
-                                border-b border-slate-200">
+                    <div class="px-6 py-5 border-b border-slate-200">
 
                         <h2 class="text-lg font-semibold text-slate-800">
                             Problem & Action
                         </h2>
 
                         <p class="text-sm text-slate-500 mt-1">
-                            Informasi masalah dan tindakan maintenance.
+                            Informasi masalah, analisis penyebab, dan tindakan maintenance.
                         </p>
 
                     </div>
 
 
-                    <div class="p-5 space-y-5">
+                    <div class="p-6 space-y-5">
 
-                        {{-- Problem --}}
+
+                        {{-- PROBLEM DESCRIPTION --}}
                         <div>
 
-                            <label class="block text-sm font-medium text-slate-700 mb-2">
+                            <label for="problem_description"
+                                   class="block text-sm font-medium text-slate-700 mb-2">
+
                                 Problem Description
+
                             </label>
 
                             <textarea name="problem_description"
-                                      rows="4"
-                                      placeholder="Jelaskan masalah yang ditemukan..."
-                                      class="w-full px-4 py-3
-                                             border border-slate-300
-                                             rounded-xl
-                                             text-sm
-                                             resize-none
-                                             focus:outline-none
-                                             focus:ring-2
-                                             focus:ring-blue-500">{{ old('problem_description', $workOrder->problem_description) }}</textarea>
+                                      id="problem_description"
+                                      rows="5"
+                                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                      placeholder="Jelaskan masalah atau keluhan equipment...">{{ old('problem_description', $workOrder->problem_description) }}</textarea>
 
                         </div>
 
 
-                        {{-- Root Cause --}}
+                        {{-- ROOT CAUSE --}}
                         <div>
 
-                            <label class="block text-sm font-medium text-slate-700 mb-2">
+                            <label for="root_cause"
+                                   class="block text-sm font-medium text-slate-700 mb-2">
+
                                 Root Cause
+
                             </label>
 
                             <textarea name="root_cause"
-                                      rows="4"
-                                      placeholder="Jelaskan penyebab utama masalah..."
-                                      class="w-full px-4 py-3
-                                             border border-slate-300
-                                             rounded-xl
-                                             text-sm
-                                             resize-none
-                                             focus:outline-none
-                                             focus:ring-2
-                                             focus:ring-blue-500">{{ old('root_cause', $workOrder->root_cause) }}</textarea>
+                                      id="root_cause"
+                                      rows="5"
+                                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                      placeholder="Jelaskan penyebab utama kerusakan...">{{ old('root_cause', $workOrder->root_cause) }}</textarea>
 
                         </div>
 
 
-                        {{-- Corrective Action --}}
+                        {{-- CORRECTIVE ACTION --}}
                         <div>
 
-                            <label class="block text-sm font-medium text-slate-700 mb-2">
+                            <label for="corrective_action"
+                                   class="block text-sm font-medium text-slate-700 mb-2">
+
                                 Corrective Action
+
                             </label>
 
                             <textarea name="corrective_action"
-                                      rows="4"
-                                      placeholder="Jelaskan tindakan perbaikan yang dilakukan..."
-                                      class="w-full px-4 py-3
-                                             border border-slate-300
-                                             rounded-xl
-                                             text-sm
-                                             resize-none
-                                             focus:outline-none
-                                             focus:ring-2
-                                             focus:ring-blue-500">{{ old('corrective_action', $workOrder->corrective_action) }}</textarea>
+                                      id="corrective_action"
+                                      rows="5"
+                                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                      placeholder="Jelaskan tindakan perbaikan yang dilakukan...">{{ old('corrective_action', $workOrder->corrective_action) }}</textarea>
 
                         </div>
 
 
-                        {{-- Completion Notes --}}
+                        {{-- COMPLETION NOTES --}}
                         <div>
 
-                            <label class="block text-sm font-medium text-slate-700 mb-2">
+                            <label for="completion_notes"
+                                   class="block text-sm font-medium text-slate-700 mb-2">
+
                                 Completion Notes
+
                             </label>
 
                             <textarea name="completion_notes"
+                                      id="completion_notes"
                                       rows="4"
-                                      placeholder="Catatan penyelesaian pekerjaan..."
-                                      class="w-full px-4 py-3
-                                             border border-slate-300
-                                             rounded-xl
-                                             text-sm
-                                             resize-none
-                                             focus:outline-none
-                                             focus:ring-2
-                                             focus:ring-blue-500">{{ old('completion_notes', $workOrder->completion_notes) }}</textarea>
+                                      class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                                      placeholder="Catatan penyelesaian Work Order...">{{ old('completion_notes', $workOrder->completion_notes) }}</textarea>
+
+                            <p class="text-xs text-slate-500 mt-1">
+                                Catatan ini dapat diperbarui selama proses Work Order.
+                            </p>
 
                         </div>
 
@@ -598,225 +585,190 @@
             </div>
 
 
-            {{-- =================================================
-                RIGHT
-            ================================================== --}}
+            {{-- ================================================= --}}
+            {{-- RIGHT SIDEBAR --}}
+            {{-- ================================================= --}}
             <div class="space-y-6">
 
 
-                {{-- =============================================
-                    STATUS
-                ============================================== --}}
-                <div class="bg-white rounded-2xl
-                            border border-slate-200
-                            shadow-sm">
+                {{-- ============================================= --}}
+                {{-- WORK ORDER STATUS --}}
+                {{-- ============================================= --}}
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200">
 
-                    <div class="px-5 py-4
-                                border-b border-slate-200">
+                    <div class="px-6 py-5 border-b border-slate-200">
 
                         <h2 class="text-lg font-semibold text-slate-800">
                             Status Work Order
                         </h2>
 
+                        <p class="text-sm text-slate-500 mt-1">
+                            Status dikontrol melalui workflow.
+                        </p>
+
                     </div>
 
 
-                    <div class="p-5">
+                    <div class="p-6">
 
-                        <label class="block text-sm font-medium text-slate-700 mb-2">
-                            Status
-                            <span class="text-red-500">*</span>
-                        </label>
+                        <div class="rounded-xl border {{ $statusClass }} p-4">
 
-                        <select name="status"
-                                id="status"
-                                required
-                                class="w-full px-4 py-2.5
-                                       border border-slate-300
-                                       rounded-xl
-                                       text-sm
-                                       bg-white
-                                       focus:outline-none
-                                       focus:ring-2
-                                       focus:ring-blue-500">
+                            <div class="flex items-center justify-between">
 
-                            <option value="OPEN"
-                                {{ old(
-                                    'status',
-                                    $workOrder->status
-                                ) === 'OPEN' ? 'selected' : '' }}>
-                                Open
-                            </option>
+                                <span class="text-sm font-medium">
+                                    Status Saat Ini
+                                </span>
 
-                            <option value="ASSIGNED"
-                                {{ old(
-                                    'status',
-                                    $workOrder->status
-                                ) === 'ASSIGNED' ? 'selected' : '' }}>
-                                Assigned
-                            </option>
+                                <span class="font-bold">
+                                    {{ $statusLabel }}
+                                </span>
 
-                            <option value="IN_PROGRESS"
-                                {{ old(
-                                    'status',
-                                    $workOrder->status
-                                ) === 'IN_PROGRESS' ? 'selected' : '' }}>
-                                In Progress
-                            </option>
+                            </div>
 
-                            <option value="ON_HOLD"
-                                {{ old(
-                                    'status',
-                                    $workOrder->status
-                                ) === 'ON_HOLD' ? 'selected' : '' }}>
-                                On Hold
-                            </option>
+                        </div>
 
-                            <option value="COMPLETED"
-                                {{ old(
-                                    'status',
-                                    $workOrder->status
-                                ) === 'COMPLETED' ? 'selected' : '' }}>
-                                Completed
-                            </option>
 
-                            <option value="CANCELLED"
-                                {{ old(
-                                    'status',
-                                    $workOrder->status
-                                ) === 'CANCELLED' ? 'selected' : '' }}>
-                                Cancelled
-                            </option>
+                        <div class="mt-4 rounded-xl bg-slate-50 border border-slate-200 p-4">
 
-                        </select>
+                            <p class="text-xs leading-5 text-slate-600">
+
+                                Status Work Order tidak dapat diubah langsung dari halaman Edit.
+                                Gunakan halaman Detail Work Order untuk menjalankan proses:
+
+                            </p>
+
+                            <ul class="mt-3 text-xs text-slate-600 space-y-2">
+
+                                <li class="flex gap-2">
+                                    <span class="font-semibold">1.</span>
+                                    <span>Assign Technician</span>
+                                </li>
+
+                                <li class="flex gap-2">
+                                    <span class="font-semibold">2.</span>
+                                    <span>Start Work Order</span>
+                                </li>
+
+                                <li class="flex gap-2">
+                                    <span class="font-semibold">3.</span>
+                                    <span>Hold / Resume</span>
+                                </li>
+
+                                <li class="flex gap-2">
+                                    <span class="font-semibold">4.</span>
+                                    <span>Complete Work Order</span>
+                                </li>
+
+                            </ul>
+
+                        </div>
 
                     </div>
 
                 </div>
 
 
-                {{-- =============================================
-                    SCHEDULE
-                ============================================== --}}
-                <div class="bg-white rounded-2xl
-                            border border-slate-200
-                            shadow-sm">
+                {{-- ============================================= --}}
+                {{-- SCHEDULE --}}
+                {{-- ============================================= --}}
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200">
 
-                    <div class="px-5 py-4
-                                border-b border-slate-200">
+                    <div class="px-6 py-5 border-b border-slate-200">
 
                         <h2 class="text-lg font-semibold text-slate-800">
                             Schedule
                         </h2>
 
+                        <p class="text-sm text-slate-500 mt-1">
+                            Rencana pelaksanaan Work Order.
+                        </p>
+
                     </div>
 
 
-                    <div class="p-5 space-y-5">
+                    <div class="p-6 space-y-5">
 
-                        {{-- Planned Start --}}
+
+                        {{-- PLANNED START --}}
                         <div>
 
-                            <label class="block text-sm font-medium text-slate-700 mb-2">
+                            <label for="planned_start"
+                                   class="block text-sm font-medium text-slate-700 mb-2">
+
                                 Planned Start
+
                             </label>
 
                             <input type="datetime-local"
                                    name="planned_start"
-                                   value="{{ old(
-                                       'planned_start',
-                                       $workOrder->planned_start
-                                           ? $workOrder->planned_start->format('Y-m-d\TH:i')
-                                           : ''
-                                   ) }}"
-                                   class="w-full px-4 py-2.5
-                                          border border-slate-300
-                                          rounded-xl
-                                          text-sm
-                                          focus:outline-none
-                                          focus:ring-2
-                                          focus:ring-blue-500">
+                                   id="planned_start"
+                                   value="{{ old('planned_start', $workOrder->planned_start ? $workOrder->planned_start->format('Y-m-d\TH:i') : '') }}"
+                                   class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
 
                         </div>
 
 
-                        {{-- Planned End --}}
+                        {{-- PLANNED END --}}
                         <div>
 
-                            <label class="block text-sm font-medium text-slate-700 mb-2">
+                            <label for="planned_end"
+                                   class="block text-sm font-medium text-slate-700 mb-2">
+
                                 Planned End
+
                             </label>
 
                             <input type="datetime-local"
                                    name="planned_end"
-                                   value="{{ old(
-                                       'planned_end',
-                                       $workOrder->planned_end
-                                           ? $workOrder->planned_end->format('Y-m-d\TH:i')
-                                           : ''
-                                   ) }}"
-                                   class="w-full px-4 py-2.5
-                                          border border-slate-300
-                                          rounded-xl
-                                          text-sm
-                                          focus:outline-none
-                                          focus:ring-2
-                                          focus:ring-blue-500">
+                                   id="planned_end"
+                                   value="{{ old('planned_end', $workOrder->planned_end ? $workOrder->planned_end->format('Y-m-d\TH:i') : '') }}"
+                                   class="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm text-slate-700 focus:border-blue-500 focus:ring-2 focus:ring-blue-100">
 
                         </div>
 
 
-                        <div class="border-t border-slate-100"></div>
-
-
-                        {{-- Actual Start --}}
+                        {{-- ACTUAL START --}}
                         <div>
 
                             <label class="block text-sm font-medium text-slate-700 mb-2">
                                 Actual Start
                             </label>
 
-                            <input type="datetime-local"
-                                   name="actual_start"
-                                   value="{{ old(
-                                       'actual_start',
-                                       $workOrder->actual_start
-                                           ? $workOrder->actual_start->format('Y-m-d\TH:i')
-                                           : ''
-                                   ) }}"
-                                   class="w-full px-4 py-2.5
-                                          border border-slate-300
-                                          rounded-xl
-                                          text-sm
-                                          focus:outline-none
-                                          focus:ring-2
-                                          focus:ring-blue-500">
+                            <div class="relative">
+
+                                <input type="text"
+                                       value="{{ $workOrder->actual_start ? $workOrder->actual_start->format('d M Y H:i') : '-' }}"
+                                       readonly
+                                       class="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600 cursor-not-allowed">
+
+                            </div>
+
+                            <p class="text-xs text-slate-500 mt-1">
+                                Diisi otomatis saat Work Order dimulai.
+                            </p>
 
                         </div>
 
 
-                        {{-- Actual End --}}
+                        {{-- ACTUAL END --}}
                         <div>
 
                             <label class="block text-sm font-medium text-slate-700 mb-2">
                                 Actual End
                             </label>
 
-                            <input type="datetime-local"
-                                   name="actual_end"
-                                   value="{{ old(
-                                       'actual_end',
-                                       $workOrder->actual_end
-                                           ? $workOrder->actual_end->format('Y-m-d\TH:i')
-                                           : ''
-                                   ) }}"
-                                   class="w-full px-4 py-2.5
-                                          border border-slate-300
-                                          rounded-xl
-                                          text-sm
-                                          focus:outline-none
-                                          focus:ring-2
-                                          focus:ring-blue-500">
+                            <div class="relative">
+
+                                <input type="text"
+                                       value="{{ $workOrder->actual_end ? $workOrder->actual_end->format('d M Y H:i') : '-' }}"
+                                       readonly
+                                       class="w-full rounded-xl border border-slate-200 bg-slate-100 px-4 py-3 text-sm text-slate-600 cursor-not-allowed">
+
+                            </div>
+
+                            <p class="text-xs text-slate-500 mt-1">
+                                Diisi otomatis saat Work Order diselesaikan.
+                            </p>
 
                         </div>
 
@@ -825,13 +777,10 @@
                 </div>
 
 
-                {{-- =============================================
-                    INFORMATION
-                ============================================== --}}
-                <div class="bg-blue-50
-                            border border-blue-100
-                            rounded-2xl
-                            p-5">
+                {{-- ============================================= --}}
+                {{-- INFORMATION --}}
+                {{-- ============================================= --}}
+                <div class="bg-blue-50 rounded-2xl border border-blue-200 p-5">
 
                     <div class="flex items-start gap-3">
 
@@ -844,19 +793,22 @@
 
                             <path stroke-linecap="round"
                                   stroke-linejoin="round"
-                                  d="M13 16h-1v-4h-1m1-4h.01M12 21a9 9 0 100-18 9 9 0 000 18z" />
+                                  d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z"/>
 
                         </svg>
 
                         <div>
 
-                            <p class="text-sm font-semibold text-blue-800">
+                            <h3 class="font-semibold text-blue-800">
                                 Informasi
-                            </p>
+                            </h3>
 
-                            <p class="text-xs text-blue-700 mt-1 leading-relaxed">
-                                Perubahan Work Order akan dicatat ke Activity Log.
-                                Nomor Work Order tidak dapat diubah.
+                            <p class="text-sm text-blue-700 mt-1 leading-6">
+
+                                Perubahan pada Work Order akan tercatat pada Activity Log.
+                                WO Number, Actual Start, Actual End, dan Status dikelola
+                                melalui workflow Work Order.
+
                             </p>
 
                         </div>
@@ -865,70 +817,45 @@
 
                 </div>
 
-            </div>
 
-        </div>
+                {{-- ============================================= --}}
+                {{-- ACTION BUTTON --}}
+                {{-- ============================================= --}}
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-5">
 
+                    <div class="flex flex-col gap-3">
 
-        {{-- =====================================================
-            FORM ACTION
-        ====================================================== --}}
-        <div class="mt-6
-                    bg-white
-                    border border-slate-200
-                    rounded-2xl
-                    shadow-sm
-                    p-5">
+                        <button type="submit"
+                                class="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition">
 
-            <div class="flex flex-col-reverse sm:flex-row
-                        sm:items-center
-                        sm:justify-between
-                        gap-3">
+                            <svg xmlns="http://www.w3.org/2000/svg"
+                                 class="w-5 h-5"
+                                 fill="none"
+                                 viewBox="0 0 24 24"
+                                 stroke="currentColor"
+                                 stroke-width="2">
 
-                <a href="{{ route('work-orders.show', $workOrder) }}"
-                   class="inline-flex items-center justify-center
-                          gap-2
-                          px-5 py-2.5
-                          border border-slate-300
-                          text-slate-600
-                          text-sm font-semibold
-                          rounded-xl
-                          hover:bg-slate-50
-                          transition">
+                                <path stroke-linecap="round"
+                                      stroke-linejoin="round"
+                                      d="M5 13l4 4L19 7"/>
 
-                    Batal
+                            </svg>
 
-                </a>
+                            Simpan Perubahan
+
+                        </button>
 
 
-                <button type="submit"
-                        class="inline-flex items-center justify-center
-                               gap-2
-                               px-6 py-2.5
-                               bg-blue-600
-                               hover:bg-blue-700
-                               text-white
-                               text-sm font-semibold
-                               rounded-xl
-                               shadow-sm
-                               transition">
+                        <a href="{{ route('work-orders.show', $workOrder) }}"
+                           class="w-full inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-3 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition">
 
-                    <svg xmlns="http://www.w3.org/2000/svg"
-                         class="w-5 h-5"
-                         fill="none"
-                         viewBox="0 0 24 24"
-                         stroke="currentColor"
-                         stroke-width="2">
+                            Batal
 
-                        <path stroke-linecap="round"
-                              stroke-linejoin="round"
-                              d="M5 13l4 4L19 7" />
+                        </a>
 
-                    </svg>
+                    </div>
 
-                    Simpan Perubahan
-
-                </button>
+                </div>
 
             </div>
 
@@ -939,90 +866,149 @@
 </div>
 
 
-{{-- =============================================================
-    AUTO FILL DARI MAINTENANCE REQUEST
-============================================================= --}}
+{{-- ============================================================= --}}
+{{-- JAVASCRIPT --}}
+{{-- ============================================================= --}}
 <script>
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    const requestSelect = document.getElementById('maintenance_request_id');
-    const equipmentSelect = document.getElementById('equipment_id');
-    const prioritySelect = document.getElementById('priority');
-    const problemField = document.querySelector(
-        'textarea[name="problem_description"]'
-    );
+    const maintenanceRequest =
+        document.getElementById('maintenance_request_id');
+
+    const equipment =
+        document.getElementById('equipment_id');
+
+    const priority =
+        document.getElementById('priority');
+
+    const problemDescription =
+        document.getElementById('problem_description');
+
+    const equipmentHelp =
+        document.getElementById('equipment-help');
 
 
-    if (!requestSelect) {
+    if (!maintenanceRequest) {
         return;
     }
 
 
-    requestSelect.addEventListener('change', function () {
+    function syncMaintenanceRequest() {
 
-        const selectedOption =
-            this.options[this.selectedIndex];
+        const selected =
+            maintenanceRequest.options[
+                maintenanceRequest.selectedIndex
+            ];
 
 
-        if (!selectedOption || !selectedOption.value) {
+        if (!selected || !selected.value) {
+
+            if (equipmentHelp) {
+
+                equipmentHelp.textContent =
+                    'Equipment dapat dipilih secara manual jika Work Order tidak berasal dari Maintenance Request.';
+
+            }
+
+            if (equipment) {
+
+                equipment.disabled = false;
+
+                equipment.classList.remove(
+                    'bg-slate-100',
+                    'cursor-not-allowed'
+                );
+
+                equipment.classList.add('bg-white');
+
+            }
+
             return;
         }
 
 
         const equipmentId =
-            selectedOption.dataset.equipment;
+            selected.dataset.equipment;
 
-        const priority =
-            selectedOption.dataset.priority;
+        const selectedPriority =
+            selected.dataset.priority;
 
         const description =
-            selectedOption.dataset.description;
+            selected.dataset.description;
 
 
         /*
-        |--------------------------------------------------------------------------
-        | Equipment
-        |--------------------------------------------------------------------------
-        */
+         * AUTO SELECT EQUIPMENT
+         */
+        if (equipment && equipmentId) {
 
-        if (equipmentId && equipmentSelect) {
+            equipment.value = equipmentId;
 
-            equipmentSelect.value = equipmentId;
+            equipment.disabled = true;
+
+            equipment.classList.remove('bg-white');
+
+            equipment.classList.add(
+                'bg-slate-100',
+                'cursor-not-allowed'
+            );
+
+            if (equipmentHelp) {
+
+                equipmentHelp.textContent =
+                    'Equipment dikunci karena mengikuti Maintenance Request yang dipilih.';
+
+            }
 
         }
 
 
         /*
-        |--------------------------------------------------------------------------
-        | Priority
-        |--------------------------------------------------------------------------
-        */
+         * AUTO SELECT PRIORITY
+         */
+        if (priority && selectedPriority) {
 
-        if (priority && prioritySelect) {
+            const priorityOption =
+                Array.from(priority.options).find(
+                    option => option.value === selectedPriority
+                );
 
-            prioritySelect.value = priority;
+            if (priorityOption) {
+
+                priority.value = selectedPriority;
+
+            }
 
         }
 
 
         /*
-        |--------------------------------------------------------------------------
-        | Problem Description
-        |--------------------------------------------------------------------------
-        */
-
+         * AUTO FILL PROBLEM DESCRIPTION
+         */
         if (
+            problemDescription &&
             description &&
-            problemField &&
-            !problemField.value.trim()
+            !problemDescription.value.trim()
         ) {
 
-            problemField.value = description;
+            problemDescription.value = description;
 
         }
 
-    });
+    }
+
+
+    maintenanceRequest.addEventListener(
+        'change',
+        syncMaintenanceRequest
+    );
+
+
+    /*
+     * Jalankan ketika halaman pertama kali dibuka.
+     */
+    syncMaintenanceRequest();
 
 });
 

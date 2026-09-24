@@ -19,6 +19,7 @@ use App\Http\Controllers\{
     WorkOrderController,
 };
 
+
 /*
 |--------------------------------------------------------------------------
 | Guest Routes
@@ -40,6 +41,7 @@ Route::middleware('guest')->group(function () {
         ->name('register.store');
 });
 
+
 /*
 |--------------------------------------------------------------------------
 | Authenticated Routes
@@ -47,6 +49,12 @@ Route::middleware('guest')->group(function () {
 */
 
 Route::middleware('auth')->group(function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | Authentication
+    |--------------------------------------------------------------------------
+    */
 
     Route::post('/logout', [AuthController::class, 'logout'])
         ->name('logout');
@@ -56,6 +64,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/select-role', [AuthController::class, 'selectRole'])
         ->name('select-role');
 
+
     /*
     |--------------------------------------------------------------------------
     | Activity Logs
@@ -64,6 +73,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('/activity-logs', [ActivityLogController::class, 'index'])
         ->name('activity-logs.index');
+
 
     /*
     |--------------------------------------------------------------------------
@@ -75,12 +85,62 @@ Route::middleware('auth')->group(function () {
         ->middleware('permission:dashboard')
         ->name('dashboard');
 
+
+    /*
+    |--------------------------------------------------------------------------
+    | Work Orders
+    |--------------------------------------------------------------------------
+    */
+
     Route::resource('work-orders', WorkOrderController::class);
 
 
+    /*
+    |--------------------------------------------------------------------------
+    | Work Order Workflow
+    |--------------------------------------------------------------------------
+    */
+
+    Route::post(
+        'work-orders/{workOrder}/assign',
+        [WorkOrderController::class, 'assign']
+    )->name('work-orders.assign');
+
+    Route::post(
+        'work-orders/{workOrder}/start',
+        [WorkOrderController::class, 'start']
+    )->name('work-orders.start');
+
+    Route::post(
+        'work-orders/{workOrder}/hold',
+        [WorkOrderController::class, 'hold']
+    )->name('work-orders.hold');
+
+    Route::post(
+        'work-orders/{workOrder}/resume',
+        [WorkOrderController::class, 'resume']
+    )->name('work-orders.resume');
+
+    Route::post(
+        'work-orders/{workOrder}/complete',
+        [WorkOrderController::class, 'complete']
+    )->name('work-orders.complete');
+
+    Route::post(
+        'work-orders/{workOrder}/cancel',
+        [WorkOrderController::class, 'cancel']
+    )->name('work-orders.cancel');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notifications
+    |--------------------------------------------------------------------------
+    */
+
     Route::get(
-    '/notifications',
-    [NotificationController::class, 'index']
+        '/notifications',
+        [NotificationController::class, 'index']
     )->name('notifications.index');
 
     Route::post(
@@ -92,6 +152,8 @@ Route::middleware('auth')->group(function () {
         '/notifications/read-all',
         [NotificationController::class, 'markAllRead']
     )->name('notifications.read-all');
+
+
     /*
     |--------------------------------------------------------------------------
     | Tickets
@@ -101,15 +163,24 @@ Route::middleware('auth')->group(function () {
     Route::middleware('permission:tickets')->group(function () {
 
         Route::resource('tickets', TicketController::class);
-        Route::post(
-    '/tickets/{ticket}/evidence',
-    [MaintenanceEvidenceController::class, 'store']
-)->name('tickets.evidence.store');
 
-Route::delete(
-    '/tickets/{ticket}/evidence/{evidence}',
-    [MaintenanceEvidenceController::class, 'destroy']
-)->name('tickets.evidence.destroy');
+        Route::post(
+            '/tickets/{ticket}/evidence',
+            [MaintenanceEvidenceController::class, 'store']
+        )->name('tickets.evidence.store');
+
+        Route::delete(
+            '/tickets/{ticket}/evidence/{evidence}',
+            [MaintenanceEvidenceController::class, 'destroy']
+        )->name('tickets.evidence.destroy');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ticket Actions
+        |--------------------------------------------------------------------------
+        */
+
         Route::prefix('tickets/{ticket}')
             ->name('tickets.')
             ->group(function () {
@@ -129,6 +200,7 @@ Route::delete(
                     [TicketController::class, 'addLog']
                 )->name('addLog');
 
+
                 /*
                 |--------------------------------------------------------------------------
                 | Spareparts inside Ticket
@@ -145,6 +217,7 @@ Route::delete(
                     [TicketController::class, 'removeSparepart']
                 )->name('spareparts.destroy');
             });
+
 
         /*
         |--------------------------------------------------------------------------
@@ -173,6 +246,7 @@ Route::delete(
         )->name('downtime.complete');
     });
 
+
     /*
     |--------------------------------------------------------------------------
     | Maintenance
@@ -183,6 +257,12 @@ Route::delete(
         ->prefix('maintenance')
         ->name('maintenance.')
         ->group(function () {
+
+            /*
+            |--------------------------------------------------------------------------
+            | Maintenance Request
+            |--------------------------------------------------------------------------
+            */
 
             Route::get(
                 '/',
@@ -198,6 +278,7 @@ Route::delete(
                 '/{maintenance}/status',
                 [MaintenanceController::class, 'updateStatus']
             )->name('status');
+
 
             /*
             |--------------------------------------------------------------------------
@@ -226,6 +307,7 @@ Route::delete(
                 });
         });
 
+
     /*
     |--------------------------------------------------------------------------
     | History & Export
@@ -234,28 +316,29 @@ Route::delete(
 
     Route::middleware('permission:history')
         ->prefix('history')
-        ->name('history')
+        ->name('history.')
         ->group(function () {
 
             Route::get(
                 '/',
                 [MaintenanceController::class, 'history']
-            );
+            )->name('index');
 
             Route::get(
                 '/export/pdf',
                 [MaintenanceController::class, 'exportPdf']
-            )->name('.export.pdf');
+            )->name('export.pdf');
 
             Route::get(
                 '/export/excel',
                 [MaintenanceController::class, 'exportExcel']
-            )->name('.export.excel');
+            )->name('export.excel');
         });
+
 
     /*
     |--------------------------------------------------------------------------
-    | Spareparts, Equipment, Users
+    | Spareparts
     |--------------------------------------------------------------------------
     */
 
@@ -265,9 +348,10 @@ Route::delete(
             SparepartController::class
         );
 
+
     /*
     |--------------------------------------------------------------------------
-    | Riwayat Pemakaian Sparepart
+    | Sparepart Usage
     |--------------------------------------------------------------------------
     */
 
@@ -290,6 +374,7 @@ Route::delete(
             )->name('sparepart-usages.store');
         });
 
+
     /*
     |--------------------------------------------------------------------------
     | Equipment
@@ -304,8 +389,9 @@ Route::delete(
         ->only([
             'index',
             'store',
-            'destroy'
+            'destroy',
         ]);
+
 
     /*
     |--------------------------------------------------------------------------
@@ -321,7 +407,7 @@ Route::delete(
         )->only([
             'index',
             'store',
-            'destroy'
+            'destroy',
         ]);
 
         Route::put(
@@ -329,4 +415,5 @@ Route::delete(
             [UserController::class, 'updatePermissions']
         )->name('users.permissions');
     });
+
 });
