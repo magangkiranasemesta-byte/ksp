@@ -418,11 +418,11 @@
                         @if(auth()->user()->hasPermission('history'))
 
                             <a
-                                href="{{ route('history') }}"
+                                href="{{ route('history.index') }}"
                                 class="flex items-center gap-3
                                        px-3.5 py-2.5 rounded-xl
                                        text-sm font-medium transition-all
-                                       {{ request()->routeIs('history')
+                                       {{ request()->routeIs('history.index')
                                             ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
                                             : 'text-slate-400 hover:bg-slate-800/60 hover:text-white' }}">
 

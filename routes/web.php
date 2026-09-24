@@ -13,6 +13,7 @@ use App\Http\Controllers\{
     TicketController,
     PreventiveMaintenanceController,
     ActivityLogController,
+    HistoryController,
     EquipmentDowntimeController,
     NotificationController,
     MaintenanceEvidenceController,
