@@ -13,13 +13,11 @@ use App\Http\Controllers\{
     TicketController,
     PreventiveMaintenanceController,
     ActivityLogController,
-    HistoryController,
     EquipmentDowntimeController,
     NotificationController,
     MaintenanceEvidenceController,
     WorkOrderController,
 };
-
 
 /*
 |--------------------------------------------------------------------------
@@ -98,43 +96,6 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Work Order Workflow
-    |--------------------------------------------------------------------------
-    */
-
-    Route::post(
-        'work-orders/{workOrder}/assign',
-        [WorkOrderController::class, 'assign']
-    )->name('work-orders.assign');
-
-    Route::post(
-        'work-orders/{workOrder}/start',
-        [WorkOrderController::class, 'start']
-    )->name('work-orders.start');
-
-    Route::post(
-        'work-orders/{workOrder}/hold',
-        [WorkOrderController::class, 'hold']
-    )->name('work-orders.hold');
-
-    Route::post(
-        'work-orders/{workOrder}/resume',
-        [WorkOrderController::class, 'resume']
-    )->name('work-orders.resume');
-
-    Route::post(
-        'work-orders/{workOrder}/complete',
-        [WorkOrderController::class, 'complete']
-    )->name('work-orders.complete');
-
-    Route::post(
-        'work-orders/{workOrder}/cancel',
-        [WorkOrderController::class, 'cancel']
-    )->name('work-orders.cancel');
-
-
-    /*
-    |--------------------------------------------------------------------------
     | Notifications
     |--------------------------------------------------------------------------
     */
@@ -163,7 +124,20 @@ Route::middleware('auth')->group(function () {
 
     Route::middleware('permission:tickets')->group(function () {
 
+        /*
+        |--------------------------------------------------------------------------
+        | Ticket Resource
+        |--------------------------------------------------------------------------
+        */
+
         Route::resource('tickets', TicketController::class);
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Ticket Evidence
+        |--------------------------------------------------------------------------
+        */
 
         Route::post(
             '/tickets/{ticket}/evidence',
@@ -220,38 +194,51 @@ Route::middleware('auth')->group(function () {
             });
 
 
-        // ==========================================================
-        // DOWNTIME EQUIPMENT
-        // ==========================================================
+        /*
+        |--------------------------------------------------------------------------
+        | Downtime Equipment
+        |--------------------------------------------------------------------------
+        */
 
-        Route::get('/downtime', [EquipmentDowntimeController::class, 'index'])
-            ->name('downtime.index');
+        Route::get(
+            '/downtime',
+            [EquipmentDowntimeController::class, 'index']
+        )->name('downtime.index');
 
-        Route::get('/downtime/create', [EquipmentDowntimeController::class, 'create'])
-            ->name('downtime.create');
+        Route::get(
+            '/downtime/create',
+            [EquipmentDowntimeController::class, 'create']
+        )->name('downtime.create');
 
-        Route::post('/downtime', [EquipmentDowntimeController::class, 'store'])
-            ->name('downtime.store');
+        Route::post(
+            '/downtime',
+            [EquipmentDowntimeController::class, 'store']
+        )->name('downtime.store');
 
-        Route::get('/downtime/{downtime}', [EquipmentDowntimeController::class, 'show'])
-            ->name('downtime.show');
+        Route::get(
+            '/downtime/{downtime}',
+            [EquipmentDowntimeController::class, 'show']
+        )->name('downtime.show');
 
-        Route::get('/downtime/{downtime}/edit', [EquipmentDowntimeController::class, 'edit'])
-            ->name('downtime.edit');
+        Route::get(
+            '/downtime/{downtime}/edit',
+            [EquipmentDowntimeController::class, 'edit']
+        )->name('downtime.edit');
 
-        Route::put('/downtime/{downtime}', [EquipmentDowntimeController::class, 'update'])
-            ->name('downtime.update');
-
-        Route::patch('/downtime/{downtime}/complete', [EquipmentDowntimeController::class, 'complete'])
-            ->name('downtime.complete');
-
-        Route::delete('/downtime/{downtime}', [EquipmentDowntimeController::class, 'destroy'])
-            ->name('downtime.destroy');
+        Route::put(
+            '/downtime/{downtime}',
+            [EquipmentDowntimeController::class, 'update']
+        )->name('downtime.update');
 
         Route::patch(
             '/downtime/{downtime}/complete',
             [EquipmentDowntimeController::class, 'complete']
         )->name('downtime.complete');
+
+        Route::delete(
+            '/downtime/{downtime}',
+            [EquipmentDowntimeController::class, 'destroy']
+        )->name('downtime.destroy');
     });
 
 
@@ -265,12 +252,6 @@ Route::middleware('auth')->group(function () {
         ->prefix('maintenance')
         ->name('maintenance.')
         ->group(function () {
-
-            /*
-            |--------------------------------------------------------------------------
-            | Maintenance Request
-            |--------------------------------------------------------------------------
-            */
 
             Route::get(
                 '/',
@@ -359,28 +340,27 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Sparepart Usage
+    | Riwayat Pemakaian Sparepart
     |--------------------------------------------------------------------------
     */
 
-    Route::middleware('permission:spareparts')
-        ->group(function () {
+    Route::middleware('permission:spareparts')->group(function () {
 
-            Route::get(
-                '/sparepart-usages',
-                [SparepartUsageController::class, 'index']
-            )->name('sparepart-usages.index');
+        Route::get(
+            '/sparepart-usages',
+            [SparepartUsageController::class, 'index']
+        )->name('sparepart-usages.index');
 
-            Route::get(
-                '/sparepart-usages/create',
-                [SparepartUsageController::class, 'create']
-            )->name('sparepart-usages.create');
+        Route::get(
+            '/sparepart-usages/create',
+            [SparepartUsageController::class, 'create']
+        )->name('sparepart-usages.create');
 
-            Route::post(
-                '/sparepart-usages',
-                [SparepartUsageController::class, 'store']
-            )->name('sparepart-usages.store');
-        });
+        Route::post(
+            '/sparepart-usages',
+            [SparepartUsageController::class, 'store']
+        )->name('sparepart-usages.store');
+    });
 
 
     /*
@@ -389,16 +369,74 @@ Route::middleware('auth')->group(function () {
     |--------------------------------------------------------------------------
     */
 
-    Route::middleware('permission:equipment')
-        ->resource(
-            'equipment',
-            EquipmentController::class
-        )
-        ->only([
-            'index',
-            'store',
-            'destroy',
-        ]);
+    Route::middleware('permission:equipment')->group(function () {
+
+        /*
+        |--------------------------------------------------------------------------
+        | Equipment List
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            '/equipment',
+            [EquipmentController::class, 'index']
+        )->name('equipment.index');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Equipment Detail
+        |--------------------------------------------------------------------------
+        |
+        | Ini menjadi tujuan ketika QR Code equipment di-scan.
+        |
+        */
+
+        Route::get(
+            '/equipment/{equipment}',
+            [EquipmentController::class, 'show']
+        )->name('equipment.show');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Generate QR Code Equipment
+        |--------------------------------------------------------------------------
+        |
+        | Contoh:
+        | /equipment/1/qr
+        |
+        */
+
+        Route::get(
+            '/equipment/{equipment}/qr',
+            [EquipmentController::class, 'qr']
+        )->name('equipment.qr');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Tambah Equipment
+        |--------------------------------------------------------------------------
+        */
+
+        Route::post(
+            '/equipment',
+            [EquipmentController::class, 'store']
+        )->name('equipment.store');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Hapus Equipment
+        |--------------------------------------------------------------------------
+        */
+
+        Route::delete(
+            '/equipment/{equipment}',
+            [EquipmentController::class, 'destroy']
+        )->name('equipment.destroy');
+    });
 
 
     /*
@@ -423,5 +461,4 @@ Route::middleware('auth')->group(function () {
             [UserController::class, 'updatePermissions']
         )->name('users.permissions');
     });
-
 });
