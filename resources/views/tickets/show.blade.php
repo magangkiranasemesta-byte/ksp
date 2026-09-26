@@ -1,4 +1,3 @@
-```blade
 @extends('layouts.app')
 
 @section('title', 'Detail Tiket #' . $ticket->ticket_number . ' - Maintenance X')
@@ -562,4 +561,4 @@
 </div>
 
 @endsection
-```
+

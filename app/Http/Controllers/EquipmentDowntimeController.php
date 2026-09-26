@@ -46,11 +46,9 @@ class EquipmentDowntimeController extends Controller
      */
     public function create()
     {
-        $equipment = Equipment::orderBy('name')->get();
+        $equipments = Equipment::orderBy('name')->get();
 
-        return view('downtime.create', [
-            'equipment' => $equipment,
-        ]);
+        return view('downtime.create', compact('equipments'));
     }
 
     /**

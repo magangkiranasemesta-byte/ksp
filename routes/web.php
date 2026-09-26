@@ -220,26 +220,33 @@ Route::middleware('auth')->group(function () {
             });
 
 
-        /*
-        |--------------------------------------------------------------------------
-        | Equipment Downtime
-        |--------------------------------------------------------------------------
-        */
+        // ==========================================================
+        // DOWNTIME EQUIPMENT
+        // ==========================================================
 
-        Route::get(
-            '/downtime',
-            [EquipmentDowntimeController::class, 'index']
-        )->name('downtime.index');
+        Route::get('/downtime', [EquipmentDowntimeController::class, 'index'])
+            ->name('downtime.index');
 
-        Route::get(
-            '/downtime/create',
-            [EquipmentDowntimeController::class, 'create']
-        )->name('downtime.create');
+        Route::get('/downtime/create', [EquipmentDowntimeController::class, 'create'])
+            ->name('downtime.create');
 
-        Route::post(
-            '/downtime',
-            [EquipmentDowntimeController::class, 'store']
-        )->name('downtime.store');
+        Route::post('/downtime', [EquipmentDowntimeController::class, 'store'])
+            ->name('downtime.store');
+
+        Route::get('/downtime/{downtime}', [EquipmentDowntimeController::class, 'show'])
+            ->name('downtime.show');
+
+        Route::get('/downtime/{downtime}/edit', [EquipmentDowntimeController::class, 'edit'])
+            ->name('downtime.edit');
+
+        Route::put('/downtime/{downtime}', [EquipmentDowntimeController::class, 'update'])
+            ->name('downtime.update');
+
+        Route::patch('/downtime/{downtime}/complete', [EquipmentDowntimeController::class, 'complete'])
+            ->name('downtime.complete');
+
+        Route::delete('/downtime/{downtime}', [EquipmentDowntimeController::class, 'destroy'])
+            ->name('downtime.destroy');
 
         Route::patch(
             '/downtime/{downtime}/complete',

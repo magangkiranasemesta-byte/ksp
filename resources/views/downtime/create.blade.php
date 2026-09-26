@@ -6,7 +6,6 @@
 
 <div class="downtime-page">
 
-```
 {{-- HEADER --}}
 <div class="downtime-header">
 
@@ -272,7 +271,7 @@
     </form>
 
 </div>
-```
+
 
 </div>
 
