@@ -1,0 +1,411 @@
+/* =========================================================
+   GLOBAL RESPONSIVE LAYOUT
+   ========================================================= */
+
+html,
+body {
+    overflow-x: hidden;
+}
+
+
+/* =========================================================
+   SIDEBAR
+   ========================================================= */
+
+.mx-sidebar {
+    z-index: 100;
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
+}
+
+
+/* =========================================================
+   DESKTOP
+   >= 1024px
+   ========================================================= */
+
+@media (min-width: 1024px) {
+
+    .mx-sidebar {
+        position: sticky;
+        top: 0;
+
+        height: 100vh;
+        min-height: 100vh;
+
+        transform: translateX(0);
+    }
+
+    .mx-sidebar-toggle,
+    .mx-sidebar-overlay {
+        display: none !important;
+    }
+}
+
+
+/* =========================================================
+   TABLET + MOBILE
+   <= 1023px
+   ========================================================= */
+
+@media (max-width: 1023px) {
+
+     #app-main {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    .mx-page-content {
+        width: 100% !important;
+        max-width: 100% !important;
+
+        box-sizing: border-box;
+    }
+
+    .mx-sidebar {
+        position: fixed !important;
+
+        top: 0 !important;
+        left: 0 !important;
+        bottom: 0 !important;
+
+        width: min(82vw, 290px) !important;
+
+        height: 100vh !important;
+        max-height: 100vh !important;
+
+        margin: 0 !important;
+
+        transform: translateX(-110%) !important;
+
+        transition: transform 0.25s ease;
+
+        z-index: 1000 !important;
+
+        overflow-y: auto;
+    }
+
+    .mx-sidebar.is-open {
+        transform: translateX(0) !important;
+    }
+
+    .mx-main {
+        width: 100% !important;
+        min-width: 0 !important;
+        margin-left: 0 !important;
+    }
+    /*
+     * Overlay
+     */
+
+    .mx-sidebar-overlay {
+        position: fixed;
+
+        inset: 0;
+
+        z-index: 90;
+
+        display: block;
+
+        background: rgba(15, 23, 42, 0.52);
+
+        opacity: 0;
+
+        visibility: hidden;
+
+        pointer-events: none;
+
+        transition:
+            opacity 0.25s ease,
+            visibility 0.25s ease;
+    }
+
+
+    /*
+     * Overlay aktif
+     */
+
+    .mx-sidebar-overlay.is-visible {
+        opacity: 1;
+
+        visibility: visible;
+
+        pointer-events: auto;
+    }
+
+
+    /*
+     * Hamburger
+     */
+
+    .mx-sidebar-toggle {
+        display: inline-flex;
+
+        align-items: center;
+        justify-content: center;
+
+        width: 42px;
+        height: 42px;
+
+        flex: 0 0 42px;
+
+        margin-right: 12px;
+
+        border: 1px solid #e2e8f0;
+
+        border-radius: 10px;
+
+        background: #ffffff;
+
+        color: #334155;
+
+        cursor: pointer;
+
+        transition:
+            background 0.2s ease,
+            color 0.2s ease,
+            border-color 0.2s ease;
+    }
+
+
+    .mx-sidebar-toggle:hover {
+        background: #f8fafc;
+
+        color: #2563eb;
+
+        border-color: #bfdbfe;
+    }
+
+
+    /*
+     * Main content
+     */
+
+    /* .mx-main {
+        width: 100%;
+
+        min-width: 0;
+    } */
+
+
+    /*
+     * Header
+     */
+
+    .mx-topbar {
+        padding-left: 18px !important;
+        padding-right: 18px !important;
+    }
+
+
+    /*
+     * Page content
+     */
+
+    .mx-page-content {
+        padding: 24px !important;
+    }
+
+
+    /*
+     * Disable scroll body ketika sidebar terbuka
+     */
+
+    body.sidebar-open {
+        overflow: hidden;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+   <= 640px
+   ========================================================= */
+
+@media (max-width: 640px) {
+
+    /*
+     * Header
+     */
+
+    .mx-topbar {
+        min-height: 72px;
+
+        padding-top: 12px !important;
+        padding-bottom: 12px !important;
+    }
+
+
+    /*
+     * Content
+     */
+
+    .mx-page-content {
+        padding: 16px !important;
+    }
+
+
+    /*
+     * Page title
+     */
+
+    .mx-topbar h1 {
+        max-width: 55vw;
+
+        overflow: hidden;
+
+        text-overflow: ellipsis;
+
+        white-space: nowrap;
+
+        font-size: 1.15rem !important;
+    }
+
+
+    /*
+     * Subtitle
+     */
+
+    .mx-topbar .tracking-widest {
+        font-size: 9px !important;
+    }
+
+
+    /*
+     * Notification
+     */
+
+    #notification-dropdown {
+        position: fixed !important;
+
+        top: 64px !important;
+
+        left: 12px !important;
+        right: 12px !important;
+
+        width: auto !important;
+
+        max-width: none !important;
+    }
+
+
+    /*
+     * User information pada header
+     */
+
+    .mx-topbar .text-right {
+        display: none;
+    }
+
+
+    /*
+     * Table wrapper
+     */
+
+    .table-wrapper {
+        width: 100%;
+
+        max-width: 100%;
+
+        overflow-x: auto;
+
+        -webkit-overflow-scrolling: touch;
+    }
+
+
+    /*
+     * Table
+     */
+
+    table {
+        min-width: 700px;
+    }
+
+
+    /*
+     * Tombol
+     */
+
+    .actions {
+        flex-wrap: wrap;
+    }
+
+
+    /*
+     * Modal
+     */
+
+    .modal {
+        padding: 12px;
+    }
+
+
+    .modal-card {
+        max-height: calc(100vh - 24px);
+
+        padding: 18px;
+    }
+
+
+    /*
+     * Text panjang
+     */
+
+    td,
+    th,
+    .desc {
+        overflow-wrap: anywhere;
+    }
+}
+
+
+/* =========================================================
+   EXTRA SMALL
+   <= 420px
+   ========================================================= */
+
+@media (max-width: 420px) {
+
+    .mx-sidebar {
+        width: min(88vw, 290px) !important;
+    }
+
+
+    .mx-sidebar-toggle {
+        width: 40px;
+
+        height: 40px;
+
+        flex-basis: 40px;
+
+        margin-right: 9px;
+    }
+
+
+    .mx-page-content {
+        padding: 12px !important;
+    }
+
+
+    .stats-grid {
+        grid-template-columns: 1fr !important;
+    }
+}
+
+
+/* =========================================================
+   REDUCE MOTION
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .mx-sidebar,
+    .mx-sidebar-overlay,
+    .mx-sidebar-toggle {
+        transition: none;
+    }
+}

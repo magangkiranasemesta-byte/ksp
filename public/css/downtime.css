@@ -904,6 +904,114 @@ RESPONSIVE
 
 }
 
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 1023px) {
+
+    .downtime-page {
+        padding: 20px;
+    }
+
+    .downtime-summary {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .downtime-card-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .downtime-tools {
+        width: 100%;
+    }
+
+    .downtime-search {
+        flex: 1;
+        width: auto;
+    }
+}
+
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 640px) {
+
+    .downtime-page {
+        padding: 16px;
+    }
+
+
+    .downtime-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 14px;
+    }
+
+
+    .downtime-header-left {
+        align-items: flex-start;
+    }
+
+
+    .downtime-header h1 {
+        font-size: 22px;
+    }
+
+
+    .downtime-header p {
+        font-size: 13px;
+    }
+
+
+    .btn-back,
+    .btn-primary {
+        justify-content: center;
+    }
+
+
+    .downtime-summary {
+        grid-template-columns: 1fr;
+        gap: 12px;
+    }
+
+
+    .downtime-summary-card {
+        padding: 16px;
+    }
+
+
+    .downtime-card-header {
+        padding: 16px;
+    }
+
+
+    .downtime-tools {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    .downtime-search,
+    .downtime-filter {
+        width: 100%;
+    }
+
+
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+
+    .downtime-table {
+        min-width: 1000px;
+    }
+}
+
 }
 
 

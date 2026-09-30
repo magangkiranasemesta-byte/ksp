@@ -31,6 +31,7 @@
     </script>
 
     @stack('styles')
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
 
 </head>
 
@@ -47,7 +48,8 @@
             ========================================================== -->
 
             <aside
-                class="w-64 bg-[#0B132B] text-white flex flex-col justify-between
+                id="app-sidebar"
+                class="mx-sidebar w-64 bg-[#0B132B] text-white flex flex-col justify-between
                        p-4 shrink-0 shadow-xl max-h-screen sticky top-0
                        overflow-y-auto">
 
@@ -693,6 +695,16 @@
 
             </aside>
 
+             <!-- =========================================================
+                 MOBILE SIDEBAR OVERLAY
+            ========================================================== -->
+
+            <div
+                id="sidebar-overlay"
+                class="mx-sidebar-overlay"
+                aria-hidden="true">
+            </div>
+
 
 
             <!-- =========================================================
@@ -700,7 +712,8 @@
             ========================================================== -->
 
             <main
-                class="flex-1 flex flex-col
+                id="app-main"
+                class="mx-main flex-1 flex flex-col
                        min-w-0">
 
 
@@ -709,13 +722,43 @@
                 ====================================================== -->
 
                 <header
-                    class="bg-white
+                    class="mx-topbar bg-white
                            border-b border-slate-200
                            px-8 py-4
                            flex items-center
                            justify-between
                            relative
                            z-50">
+
+                                       <!-- =================================================
+                         MOBILE HAMBURGER
+                    ================================================== -->
+
+                    <button
+                        type="button"
+                        id="sidebar-toggle"
+                        class="mx-sidebar-toggle"
+                        aria-label="Buka menu navigasi"
+                        aria-controls="app-sidebar"
+                        aria-expanded="false">
+
+                        <svg
+                            class="w-6 h-6"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                            aria-hidden="true">
+
+                            <path
+                                stroke-linecap="round"
+                                stroke-linejoin="round"
+                                stroke-width="2"
+                                d="M4 6h16M4 12h16M4 18h16">
+                            </path>
+
+                        </svg>
+
+                    </button>
 
 
                     <!-- =================================================
@@ -1367,12 +1410,14 @@
 
 
 
+
                 <!-- =====================================================
                      PAGE CONTENT
                 ====================================================== -->
 
                 <section
                     class="
+                        mx-page-content
                         p-8
                         flex-1
                     "
@@ -1536,6 +1581,7 @@
          JAVASCRIPT
     ================================================================= -->
 
+    <script src="{{ asset('js/responsive.js') }}"></script>
 
     <script>
 
