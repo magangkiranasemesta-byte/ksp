@@ -6,18 +6,15 @@
 
 <div class="min-h-screen bg-slate-100 p-6">
 
-    {{-- =========================================================
-        HEADER
-    ========================================================== --}}
     <div class="max-w-5xl mx-auto">
 
+        {{-- HEADER --}}
         <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
 
             <div class="flex items-center gap-4">
 
-                {{-- Back --}}
                 <a
-                    href="{{ route('downtime.show', $downtime->id) }}"
+                    href="{{ route('downtime.show', ['downtime' => $downtime->id]) }}"
                     class="inline-flex items-center justify-center
                            w-10 h-10 rounded-xl
                            bg-white border border-slate-200
@@ -54,7 +51,7 @@
 
             </div>
 
-            {{-- Status --}}
+            {{-- STATUS --}}
             @if($downtime->status === 'ONGOING')
 
                 <span class="inline-flex items-center gap-2
@@ -84,9 +81,20 @@
         </div>
 
 
-        {{-- =====================================================
-            VALIDATION ERROR
-        ====================================================== --}}
+        {{-- SUCCESS MESSAGE --}}
+        @if(session('success'))
+
+            <div class="mb-6 rounded-xl border border-emerald-200
+                        bg-emerald-50 p-4 text-sm text-emerald-700">
+
+                {{ session('success') }}
+
+            </div>
+
+        @endif
+
+
+        {{-- VALIDATION ERROR --}}
         @if($errors->any())
 
             <div class="mb-6 rounded-xl border border-red-200
@@ -134,11 +142,9 @@
         @endif
 
 
-        {{-- =====================================================
-            FORM
-        ====================================================== --}}
+        {{-- FORM --}}
         <form
-            action="{{ route('downtime.update', $downtime->id) }}"
+            action="{{ route('downtime.update', ['downtime' => $downtime->id]) }}"
             method="POST"
         >
 
@@ -151,9 +157,7 @@
                         shadow-sm overflow-hidden">
 
 
-                {{-- =================================================
-                    FORM HEADER
-                ================================================== --}}
+                {{-- FORM HEADER --}}
                 <div class="px-6 py-5 border-b border-slate-200">
 
                     <h2 class="text-lg font-semibold text-slate-800">
@@ -167,15 +171,11 @@
                 </div>
 
 
-                {{-- =================================================
-                    FORM BODY
-                ================================================== --}}
+                {{-- FORM BODY --}}
                 <div class="p-6 space-y-6">
 
 
-                    {{-- =============================================
-                        EQUIPMENT
-                    ============================================== --}}
+                    {{-- EQUIPMENT --}}
                     <div>
 
                         <label
@@ -216,7 +216,10 @@
 
                                     @if(!empty($item->code))
                                         — {{ $item->code }}
+                                    @elseif(!empty($item->equipment_code))
+                                        — {{ $item->equipment_code }}
                                     @endif
+
                                 </option>
 
                             @endforeach
@@ -234,9 +237,7 @@
                     </div>
 
 
-                    {{-- =============================================
-                        STARTED AT
-                    ============================================== --}}
+                    {{-- STARTED AT --}}
                     <div>
 
                         <label
@@ -276,9 +277,7 @@
                     </div>
 
 
-                    {{-- =============================================
-                        REASON
-                    ============================================== --}}
+                    {{-- REASON --}}
                     <div>
 
                         <label
@@ -296,7 +295,7 @@
                             required
                             maxlength="255"
                             value="{{ old('reason', $downtime->reason) }}"
-                            placeholder="Contoh: Mesin mengalami kerusakan"
+                            placeholder="Contoh: Equipment mengalami kerusakan"
                             class="w-full rounded-xl
                                    border border-slate-300
                                    bg-white
@@ -321,9 +320,7 @@
                     </div>
 
 
-                    {{-- =============================================
-                        DESCRIPTION
-                    ============================================== --}}
+                    {{-- DESCRIPTION --}}
                     <div>
 
                         <label
@@ -362,9 +359,7 @@
                     </div>
 
 
-                    {{-- =============================================
-                        INFO
-                    ============================================== --}}
+                    {{-- STATUS INFO --}}
                     <div class="rounded-xl bg-slate-50
                                 border border-slate-200 p-4">
 
@@ -421,12 +416,36 @@
 
                     </div>
 
+
+                    {{-- CREATED BY --}}
+                    @if($downtime->creator)
+
+                        <div>
+
+                            <label
+                                class="block text-sm font-semibold text-slate-700 mb-2"
+                            >
+                                Dibuat Oleh
+                            </label>
+
+                            <div class="rounded-xl
+                                        border border-slate-200
+                                        bg-slate-50
+                                        px-4 py-3
+                                        text-sm text-slate-700">
+
+                                {{ $downtime->creator->username }}
+
+                            </div>
+
+                        </div>
+
+                    @endif
+
                 </div>
 
 
-                {{-- =================================================
-                    FOOTER
-                ================================================== --}}
+                {{-- FOOTER --}}
                 <div class="px-6 py-5
                             border-t border-slate-200
                             bg-slate-50
@@ -436,7 +455,7 @@
                             gap-3">
 
                     <a
-                        href="{{ route('downtime.show', $downtime->id) }}"
+                        href="{{ route('downtime.show', ['downtime' => $downtime->id]) }}"
                         class="inline-flex items-center justify-center
                                px-5 py-3
                                rounded-xl

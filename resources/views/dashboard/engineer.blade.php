@@ -1,4 +1,4 @@
-```blade
+
 @extends('layouts.app')
 
 @section('title', 'Engineer Workstation')
@@ -200,4 +200,4 @@
 
 </div>
 @endsection
-```
+

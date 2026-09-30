@@ -22,25 +22,16 @@ class WorkOrderController extends Controller
             'maintenanceRequest',
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Search
-        |--------------------------------------------------------------------------
-        */
-
+        // Search
         if ($request->filled('search')) {
-
             $search = $request->search;
 
             $query->where(function ($q) use ($search) {
-
                 $q->where('wo_number', 'like', "%{$search}%")
                     ->orWhere('maintenance_type', 'like', "%{$search}%")
                     ->orWhere('priority', 'like', "%{$search}%")
                     ->orWhere('status', 'like', "%{$search}%")
-
                     ->orWhereHas('equipment', function ($equipment) use ($search) {
-
                         $equipment
                             ->where('name', 'like', "%{$search}%")
                             ->orWhere(
@@ -49,9 +40,7 @@ class WorkOrderController extends Controller
                                 "%{$search}%"
                             );
                     })
-
                     ->orWhereHas('technician', function ($technician) use ($search) {
-
                         $technician->where(
                             'username',
                             'like',
@@ -61,55 +50,23 @@ class WorkOrderController extends Controller
             });
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Filter Status
-        |--------------------------------------------------------------------------
-        */
-
+        // Filter Status
         if ($request->filled('status')) {
-
-            $query->where(
-                'status',
-                $request->status
-            );
+            $query->where('status', $request->status);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Filter Priority
-        |--------------------------------------------------------------------------
-        */
-
+        // Filter Priority
         if ($request->filled('priority')) {
-
-            $query->where(
-                'priority',
-                $request->priority
-            );
+            $query->where('priority', $request->priority);
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Pagination
-        |--------------------------------------------------------------------------
-        */
-
+        // Pagination
         $workOrders = $query
             ->latest()
             ->paginate(10)
             ->withQueryString();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Statistics
-        |--------------------------------------------------------------------------
-        */
-
+        // Statistics
         $totalWorkOrders = WorkOrder::count();
 
         $openWorkOrders = WorkOrder::whereIn(
@@ -135,13 +92,6 @@ class WorkOrderController extends Controller
             'ON_HOLD'
         )->count();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | View
-        |--------------------------------------------------------------------------
-        */
-
         return view(
             'work-orders.index',
             compact(
@@ -155,30 +105,15 @@ class WorkOrderController extends Controller
         );
     }
 
-
     /**
      * Show the form for creating a new work order.
      */
     public function create(Request $request)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Equipment
-        |--------------------------------------------------------------------------
-        |
-        | Tetap disediakan jika create WO manual masih digunakan.
-        |
-        */
-
+        // Equipment
         $equipment = Equipment::orderBy('name')->get();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Technician / Engineer
-        |--------------------------------------------------------------------------
-        */
-
+        // Technician / Engineer
         $technicians = User::whereIn(
             'role',
             [
@@ -189,47 +124,25 @@ class WorkOrderController extends Controller
             ->orderBy('username')
             ->get();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Maintenance Requests
-        |--------------------------------------------------------------------------
-        |
-        | Hanya Maintenance Request yang sudah APPROVED
-        | dan belum mempunyai Work Order.
-        |
-        */
-
+        // Maintenance Requests
+        // Hanya Maintenance Request yang sudah APPROVED
+        // dan belum mempunyai Work Order.
         $maintenanceRequests = MaintenanceRequest::with('equipment')
             ->where('status', 'APPROVED')
             ->whereDoesntHave('workOrder')
             ->latest()
             ->get();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Selected Maintenance Request
-        |--------------------------------------------------------------------------
-        */
-
+        // Selected Maintenance Request
         $selectedRequest = null;
 
         if ($request->filled('maintenance_request_id')) {
-
             $selectedRequest = MaintenanceRequest::with('equipment')
                 ->whereKey($request->maintenance_request_id)
                 ->where('status', 'APPROVED')
                 ->whereDoesntHave('workOrder')
                 ->first();
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | View
-        |--------------------------------------------------------------------------
-        */
 
         return view(
             'work-orders.create',
@@ -242,92 +155,63 @@ class WorkOrderController extends Controller
         );
     }
 
-
     /**
      * Store a newly created work order.
      */
     public function store(Request $request)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Validation
-        |--------------------------------------------------------------------------
-        */
-
         $validated = $request->validate([
             'maintenance_request_id' => [
                 'required',
                 'exists:maintenance_requests,id',
             ],
-
             'technician_id' => [
                 'nullable',
                 'exists:users,id',
             ],
-
             'maintenance_type' => [
                 'required',
                 'in:CORRECTIVE,PREVENTIVE,INSPECTION',
             ],
-
             'priority' => [
                 'required',
                 'in:LOW,MEDIUM,HIGH,CRITICAL',
             ],
-
             'problem_description' => [
                 'nullable',
                 'string',
             ],
-
             'root_cause' => [
                 'nullable',
                 'string',
             ],
-
             'corrective_action' => [
                 'nullable',
                 'string',
             ],
-
             'planned_start' => [
                 'nullable',
                 'date',
             ],
-
             'planned_end' => [
                 'nullable',
                 'date',
                 'after_or_equal:planned_start',
             ],
-
             'completion_notes' => [
                 'nullable',
                 'string',
             ],
         ]);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Get Maintenance Request
-        |--------------------------------------------------------------------------
-        */
-
+        // Get Maintenance Request
         $maintenanceRequest = MaintenanceRequest::with('equipment')
             ->findOrFail(
                 $validated['maintenance_request_id']
             );
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Check Maintenance Request Status
-        |--------------------------------------------------------------------------
-        */
-
+        // Check Maintenance Request Status
         if ($maintenanceRequest->status !== 'APPROVED') {
-
             return back()
                 ->withInput()
                 ->with(
@@ -336,20 +220,13 @@ class WorkOrderController extends Controller
                 );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Prevent Duplicate Work Order
-        |--------------------------------------------------------------------------
-        */
-
+        // Prevent Duplicate Work Order
         $existingWorkOrder = WorkOrder::where(
             'maintenance_request_id',
             $maintenanceRequest->id
         )->first();
 
         if ($existingWorkOrder) {
-
             return redirect()
                 ->route(
                     'work-orders.show',
@@ -361,15 +238,8 @@ class WorkOrderController extends Controller
                 );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validate Technician
-        |--------------------------------------------------------------------------
-        */
-
+        // Validate Technician
         if (!empty($validated['technician_id'])) {
-
             $technician = User::whereIn(
                 'role',
                 [
@@ -384,7 +254,6 @@ class WorkOrderController extends Controller
                 ->first();
 
             if (!$technician) {
-
                 return back()
                     ->withInput()
                     ->with(
@@ -394,62 +263,26 @@ class WorkOrderController extends Controller
             }
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Create Work Order
-        |--------------------------------------------------------------------------
-        */
-
+        // Create Work Order
         $workOrder = DB::transaction(function () use (
             $validated,
             $maintenanceRequest
         ) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | Generate WO Number
-            |--------------------------------------------------------------------------
-            */
-
+            // Generate WO Number
             $woNumber = $this->generateWoNumber();
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Determine Status
-            |--------------------------------------------------------------------------
-            |
-            | Jika technician langsung dipilih:
-            | OPEN → ASSIGNED
-            |
-            | Jika technician belum dipilih:
-            | OPEN
-            |
-            */
-
+            // Determine Status
             $status = !empty($validated['technician_id'])
                 ? 'ASSIGNED'
                 : 'OPEN';
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Create
-            |--------------------------------------------------------------------------
-            */
-
             return WorkOrder::create([
-
                 'wo_number' => $woNumber,
 
                 'maintenance_request_id' =>
                     $maintenanceRequest->id,
 
-                /*
-                | Equipment selalu mengikuti
-                | Maintenance Request.
-                */
+                // Equipment selalu mengikuti Maintenance Request
                 'equipment_id' =>
                     $maintenanceRequest->equipment_id,
 
@@ -485,13 +318,6 @@ class WorkOrderController extends Controller
             ]);
         });
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Redirect
-        |--------------------------------------------------------------------------
-        */
-
         return redirect()
             ->route(
                 'work-orders.show',
@@ -502,7 +328,6 @@ class WorkOrderController extends Controller
                 "Work Order {$workOrder->wo_number} berhasil dibuat."
             );
     }
-
 
     /**
      * Display the specified work order.
@@ -515,46 +340,6 @@ class WorkOrderController extends Controller
             'maintenanceRequest',
         ]);
 
-        return view(
-            'work-orders.show',
-            compact('workOrder')
-        );
-    }
-
-
-    /**
-     * Show the form for editing the specified work order.
-     */
-    public function edit(WorkOrder $workOrder)
-    {
-        /*
-        |--------------------------------------------------------------------------
-        | Load Relations
-        |--------------------------------------------------------------------------
-        */
-
-        $workOrder->load([
-            'equipment',
-            'technician',
-            'maintenanceRequest',
-        ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Equipment
-        |--------------------------------------------------------------------------
-        */
-
-        $equipment = Equipment::orderBy('name')->get();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Technician / Engineer
-        |--------------------------------------------------------------------------
-        */
-
         $technicians = User::whereIn(
             'role',
             [
@@ -565,37 +350,68 @@ class WorkOrderController extends Controller
             ->orderBy('username')
             ->get();
 
+        return view(
+            'work-orders.show',
+            compact(
+                'workOrder',
+                'technicians'
+            )
+        );
+    }
+
+    /**
+     * Show the form for editing the specified work order.
+     */
+    public function edit(WorkOrder $workOrder)
+    {
+        // Load relations
+        $workOrder->load([
+            'equipment',
+            'technician',
+            'maintenanceRequest',
+        ]);
+
+        // Equipment
+        $equipment = Equipment::orderBy('name')->get();
+
+        // Technician / Engineer
+        $technicians = User::whereIn(
+            'role',
+            [
+                'ENGINEER',
+                'TECHNICIAN',
+            ]
+        )
+            ->orderBy('username')
+            ->get();
 
         /*
-        |--------------------------------------------------------------------------
-        | Maintenance Requests
-        |--------------------------------------------------------------------------
-        |
-        | Hanya APPROVED.
-        |
-        | Request milik WO ini tetap ditampilkan.
-        |
-        */
-
+         * Maintenance Requests.
+         *
+         * Request yang sudah APPROVED tetap ditampilkan.
+         * Request yang sedang dipakai oleh WO ini juga wajib
+         * ditampilkan agar nilai maintenance_request_id tidak
+         * menjadi kosong ketika form edit dikirim.
+         */
         $maintenanceRequests = MaintenanceRequest::with('equipment')
-            ->where('status', 'APPROVED')
             ->where(function ($query) use ($workOrder) {
-
+                $query
+                    ->where('status', 'APPROVED')
+                    ->orWhere(
+                        'id',
+                        $workOrder->maintenance_request_id
+                    );
+            })
+            ->where(function ($query) use ($workOrder) {
                 $query
                     ->whereDoesntHave('workOrder')
-                    ->orWhereKey(
+                    ->orWhere(
+                        'id',
                         $workOrder->maintenance_request_id
                     );
             })
             ->latest()
             ->get();
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | View
-        |--------------------------------------------------------------------------
-        */
 
         return view(
             'work-orders.edit',
@@ -608,7 +424,6 @@ class WorkOrderController extends Controller
         );
     }
 
-
     /**
      * Update the specified work order.
      */
@@ -616,88 +431,66 @@ class WorkOrderController extends Controller
         Request $request,
         WorkOrder $workOrder
     ) {
-
         /*
-        |--------------------------------------------------------------------------
-        | Status tidak boleh diubah melalui edit biasa.
-        |--------------------------------------------------------------------------
-        */
-
+         * Status tidak diubah melalui edit biasa.
+         */
         $validated = $request->validate([
-
             'maintenance_request_id' => [
                 'required',
                 'exists:maintenance_requests,id',
             ],
-
             'technician_id' => [
                 'nullable',
                 'exists:users,id',
             ],
-
             'maintenance_type' => [
                 'required',
                 'in:CORRECTIVE,PREVENTIVE,INSPECTION',
             ],
-
             'priority' => [
                 'required',
                 'in:LOW,MEDIUM,HIGH,CRITICAL',
             ],
-
             'problem_description' => [
                 'nullable',
                 'string',
             ],
-
             'root_cause' => [
                 'nullable',
                 'string',
             ],
-
             'corrective_action' => [
                 'nullable',
                 'string',
             ],
-
             'planned_start' => [
                 'nullable',
                 'date',
             ],
-
             'planned_end' => [
                 'nullable',
                 'date',
                 'after_or_equal:planned_start',
             ],
-
             'completion_notes' => [
                 'nullable',
                 'string',
             ],
         ]);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Maintenance Request
-        |--------------------------------------------------------------------------
-        */
-
+        // Maintenance Request
         $maintenanceRequest = MaintenanceRequest::with('equipment')
             ->findOrFail(
                 $validated['maintenance_request_id']
             );
 
-
         /*
-        |--------------------------------------------------------------------------
-        | Maintenance Request harus APPROVED
-        |--------------------------------------------------------------------------
-        */
-
+         * Maintenance Request harus APPROVED.
+         *
+         * Jika user mengganti Maintenance Request ke request
+         * yang belum APPROVED, update ditolak.
+         */
         if ($maintenanceRequest->status !== 'APPROVED') {
-
             return back()
                 ->withInput()
                 ->with(
@@ -706,22 +499,19 @@ class WorkOrderController extends Controller
                 );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Prevent Duplicate Work Order
-        |--------------------------------------------------------------------------
-        */
-
+        // Prevent Duplicate Work Order
         $existingWorkOrder = WorkOrder::where(
             'maintenance_request_id',
             $validated['maintenance_request_id']
         )
-            ->whereKey('!=', $workOrder->id)
+            ->where(
+                'id',
+                '!=',
+                $workOrder->id
+            )
             ->first();
 
         if ($existingWorkOrder) {
-
             return back()
                 ->withInput()
                 ->with(
@@ -730,15 +520,8 @@ class WorkOrderController extends Controller
                 );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validate Technician
-        |--------------------------------------------------------------------------
-        */
-
+        // Validate Technician
         if (!empty($validated['technician_id'])) {
-
             $technician = User::whereIn(
                 'role',
                 [
@@ -753,7 +536,6 @@ class WorkOrderController extends Controller
                 ->first();
 
             if (!$technician) {
-
                 return back()
                     ->withInput()
                     ->with(
@@ -763,19 +545,11 @@ class WorkOrderController extends Controller
             }
         }
 
-
         /*
-        |--------------------------------------------------------------------------
-        | Update
-        |--------------------------------------------------------------------------
-        |
-        | equipment_id tidak diambil dari form.
-        | Equipment selalu mengikuti Maintenance Request.
-        |
-        */
-
+         * Equipment tidak diambil dari form.
+         * Equipment selalu mengikuti Maintenance Request.
+         */
         $workOrder->update([
-
             'maintenance_request_id' =>
                 $maintenanceRequest->id,
 
@@ -810,29 +584,18 @@ class WorkOrderController extends Controller
                 $validated['completion_notes'] ?? null,
         ]);
 
-
         /*
-        |--------------------------------------------------------------------------
-        | Jika WO masih OPEN dan Technician diisi
-        |--------------------------------------------------------------------------
-        */
-
+         * Jika WO masih OPEN dan Technician diisi,
+         * status berubah menjadi ASSIGNED.
+         */
         if (
             $workOrder->status === 'OPEN'
             && !empty($validated['technician_id'])
         ) {
-
             $workOrder->update([
                 'status' => 'ASSIGNED',
             ]);
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Redirect
-        |--------------------------------------------------------------------------
-        */
 
         return redirect()
             ->route(
@@ -845,25 +608,17 @@ class WorkOrderController extends Controller
             );
     }
 
-
     /**
      * Generate Work Order Number.
      *
      * Format:
-     *
      * WO-YYYYMMDD-0001
      */
     private function generateWoNumber(): string
     {
         $prefix = 'WO-' . now()->format('Ymd') . '-';
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Get Last WO
-        |--------------------------------------------------------------------------
-        */
-
+        // Get Last WO
         $lastWorkOrder = WorkOrder::where(
             'wo_number',
             'like',
@@ -873,19 +628,10 @@ class WorkOrderController extends Controller
             ->lockForUpdate()
             ->first();
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Sequence
-        |--------------------------------------------------------------------------
-        */
-
+        // Sequence
         if (!$lastWorkOrder) {
-
             $sequence = 1;
-
         } else {
-
             $lastSequence = (int) substr(
                 $lastWorkOrder->wo_number,
                 -4
@@ -893,13 +639,6 @@ class WorkOrderController extends Controller
 
             $sequence = $lastSequence + 1;
         }
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Return
-        |--------------------------------------------------------------------------
-        */
 
         return $prefix . str_pad(
             $sequence,
@@ -909,7 +648,6 @@ class WorkOrderController extends Controller
         );
     }
 
-
     /**
      * Assign Work Order to Technician.
      */
@@ -917,28 +655,15 @@ class WorkOrderController extends Controller
         Request $request,
         WorkOrder $workOrder
     ) {
-
-        /*
-        |--------------------------------------------------------------------------
-        | Status Validation
-        |--------------------------------------------------------------------------
-        */
-
+        // Status Validation
         if ($workOrder->status !== 'OPEN') {
-
             return back()->with(
                 'warning',
                 'Work Order hanya dapat di-assign ketika status masih OPEN.'
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validation
-        |--------------------------------------------------------------------------
-        */
-
+        // Validation
         $validated = $request->validate([
             'technician_id' => [
                 'required',
@@ -946,13 +671,7 @@ class WorkOrderController extends Controller
             ],
         ]);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validate Technician Role
-        |--------------------------------------------------------------------------
-        */
-
+        // Validate Technician Role
         $technician = User::whereIn(
             'role',
             [
@@ -966,24 +685,15 @@ class WorkOrderController extends Controller
             )
             ->first();
 
-
         if (!$technician) {
-
             return back()->with(
                 'warning',
                 'User yang dipilih bukan Engineer atau Technician.'
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Assign
-        |--------------------------------------------------------------------------
-        */
-
+        // Assign
         $workOrder->update([
-
             'technician_id' =>
                 $technician->id,
 
@@ -991,71 +701,36 @@ class WorkOrderController extends Controller
                 'ASSIGNED',
         ]);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Redirect
-        |--------------------------------------------------------------------------
-        */
-
         return back()->with(
             'success',
             "Work Order {$workOrder->wo_number} berhasil di-assign kepada {$technician->username}."
         );
     }
 
-
     /**
      * Start Work Order.
      */
     public function start(WorkOrder $workOrder)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Status Validation
-        |--------------------------------------------------------------------------
-        */
-
+        // Status Validation
         if ($workOrder->status !== 'ASSIGNED') {
-
             return back()->with(
                 'warning',
                 'Work Order hanya dapat dimulai ketika status ASSIGNED.'
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Technician Validation
-        |--------------------------------------------------------------------------
-        */
-
+        // Technician Validation
         if (!$workOrder->technician_id) {
-
             return back()->with(
                 'warning',
                 'Work Order belum memiliki Technician/Engineer.'
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Start Transaction
-        |--------------------------------------------------------------------------
-        */
-
         DB::transaction(function () use ($workOrder) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | Update Work Order
-            |--------------------------------------------------------------------------
-            */
-
+            // Update Work Order
             $workOrder->update([
-
                 'status' =>
                     'IN_PROGRESS',
 
@@ -1063,13 +738,7 @@ class WorkOrderController extends Controller
                     now(),
             ]);
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Equipment menjadi MAINTENANCE
-            |--------------------------------------------------------------------------
-            */
-
+            // Equipment menjadi MAINTENANCE
             $workOrder
                 ->equipment()
                 ->update([
@@ -1077,19 +746,11 @@ class WorkOrderController extends Controller
                 ]);
         });
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Redirect
-        |--------------------------------------------------------------------------
-        */
-
         return back()->with(
             'success',
             "Work Order {$workOrder->wo_number} mulai dikerjakan."
         );
     }
-
 
     /**
      * Hold Work Order.
@@ -1097,18 +758,15 @@ class WorkOrderController extends Controller
     public function hold(WorkOrder $workOrder)
     {
         if ($workOrder->status !== 'IN_PROGRESS') {
-
             return back()->with(
                 'warning',
                 'Work Order hanya dapat ditunda ketika sedang IN PROGRESS.'
             );
         }
 
-
         $workOrder->update([
             'status' => 'ON_HOLD',
         ]);
-
 
         return back()->with(
             'success',
@@ -1116,32 +774,27 @@ class WorkOrderController extends Controller
         );
     }
 
-
     /**
      * Resume Work Order.
      */
     public function resume(WorkOrder $workOrder)
     {
         if ($workOrder->status !== 'ON_HOLD') {
-
             return back()->with(
                 'warning',
                 'Work Order hanya dapat dilanjutkan ketika status ON HOLD.'
             );
         }
 
-
         $workOrder->update([
             'status' => 'IN_PROGRESS',
         ]);
-
 
         return back()->with(
             'success',
             "Work Order {$workOrder->wo_number} dilanjutkan kembali."
         );
     }
-
 
     /**
      * Complete Work Order.
@@ -1150,28 +803,15 @@ class WorkOrderController extends Controller
         Request $request,
         WorkOrder $workOrder
     ) {
-
-        /*
-        |--------------------------------------------------------------------------
-        | Status Validation
-        |--------------------------------------------------------------------------
-        */
-
+        // Status Validation
         if ($workOrder->status !== 'IN_PROGRESS') {
-
             return back()->with(
                 'warning',
                 'Work Order hanya dapat diselesaikan ketika status IN PROGRESS.'
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Validation
-        |--------------------------------------------------------------------------
-        */
-
+        // Validation
         $validated = $request->validate([
             'completion_notes' => [
                 'required',
@@ -1179,26 +819,12 @@ class WorkOrderController extends Controller
             ],
         ]);
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Complete Transaction
-        |--------------------------------------------------------------------------
-        */
-
         DB::transaction(function () use (
             $workOrder,
             $validated
         ) {
-
-            /*
-            |--------------------------------------------------------------------------
-            | Complete Work Order
-            |--------------------------------------------------------------------------
-            */
-
+            // Complete Work Order
             $workOrder->update([
-
                 'status' =>
                     'COMPLETED',
 
@@ -1209,13 +835,7 @@ class WorkOrderController extends Controller
                     $validated['completion_notes'],
             ]);
 
-
-            /*
-            |--------------------------------------------------------------------------
-            | Equipment kembali ACTIVE
-            |--------------------------------------------------------------------------
-            */
-
+            // Equipment kembali ACTIVE
             $workOrder
                 ->equipment()
                 ->update([
@@ -1223,31 +843,18 @@ class WorkOrderController extends Controller
                 ]);
         });
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Redirect
-        |--------------------------------------------------------------------------
-        */
-
         return back()->with(
             'success',
             "Work Order {$workOrder->wo_number} berhasil diselesaikan."
         );
     }
 
-
     /**
      * Cancel Work Order.
      */
     public function cancel(WorkOrder $workOrder)
     {
-        /*
-        |--------------------------------------------------------------------------
-        | Allowed Status
-        |--------------------------------------------------------------------------
-        */
-
+        // Allowed Status
         if (!in_array(
             $workOrder->status,
             [
@@ -1257,30 +864,16 @@ class WorkOrderController extends Controller
             ],
             true
         )) {
-
             return back()->with(
                 'warning',
                 'Work Order dengan status tersebut tidak dapat dibatalkan.'
             );
         }
 
-
-        /*
-        |--------------------------------------------------------------------------
-        | Cancel
-        |--------------------------------------------------------------------------
-        */
-
+        // Cancel
         $workOrder->update([
             'status' => 'CANCELLED',
         ]);
-
-
-        /*
-        |--------------------------------------------------------------------------
-        | Redirect
-        |--------------------------------------------------------------------------
-        */
 
         return back()->with(
             'success',

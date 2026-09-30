@@ -130,7 +130,10 @@ Route::middleware('auth')->group(function () {
         |--------------------------------------------------------------------------
         */
 
-        Route::resource('tickets', TicketController::class);
+        Route::resource(
+            'tickets',
+            TicketController::class
+        );
 
 
         /*
