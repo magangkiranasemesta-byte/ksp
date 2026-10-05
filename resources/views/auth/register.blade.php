@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - Equipment Maintenance System</title>
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
+    <script src="{{ asset('js/cookies.js') }}" defer></script>
 </head>
 
 <body>
@@ -134,6 +136,8 @@
         </div>
 
     </div>
+
+    @include('partials.cookie-consent')
 
     <script src="{{ asset('js/auth.js') }}"></script>
 </body>

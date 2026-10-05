@@ -102,6 +102,8 @@
         {{-- Actions --}}
         <div class="flex items-center gap-2">
 
+            @if(in_array($workOrder->status, ['OPEN', 'ASSIGNED']))
+            @can('update', $workOrder)
             <a href="{{ route('work-orders.edit', $workOrder) }}"
                class="inline-flex items-center gap-2
                       px-4 py-2.5
@@ -132,6 +134,8 @@
                 Edit
 
             </a>
+            @endcan
+            @endif
 
         </div>
 
@@ -209,7 +213,7 @@
 
 
     {{-- OPEN --}}
-    @if($workOrder->status === 'OPEN')
+    @if($workOrder->status === 'OPEN' && auth()->user()->can('assign', $workOrder))
 
         <div class="rounded-xl border border-blue-100 bg-blue-50 p-4">
 
@@ -264,7 +268,7 @@
 
 
     {{-- ASSIGNED --}}
-    @if($workOrder->status === 'ASSIGNED')
+    @if($workOrder->status === 'ASSIGNED' && auth()->user()->can('start', $workOrder))
 
         <div class="flex flex-col gap-4 rounded-xl border border-blue-100 bg-blue-50 p-4 sm:flex-row sm:items-center sm:justify-between">
 
@@ -302,7 +306,7 @@
 
 
     {{-- IN PROGRESS --}}
-    @if($workOrder->status === 'IN_PROGRESS')
+    @if($workOrder->status === 'IN_PROGRESS' && auth()->user()->can('complete', $workOrder))
 
         <div class="rounded-xl border border-yellow-100 bg-yellow-50 p-4">
 
@@ -362,7 +366,7 @@
 
 
     {{-- ON HOLD --}}
-    @if($workOrder->status === 'ON_HOLD')
+    @if($workOrder->status === 'ON_HOLD' && auth()->user()->can('resume', $workOrder))
 
         <div class="rounded-xl border border-orange-100 bg-orange-50 p-4">
 
@@ -437,7 +441,7 @@
 
 
     {{-- CANCEL BUTTON --}}
-    @if(in_array($workOrder->status, ['OPEN', 'ASSIGNED', 'ON_HOLD']))
+    @if(in_array($workOrder->status, ['OPEN', 'ASSIGNED', 'ON_HOLD']) && auth()->user()->can('cancel', $workOrder))
 
         <div class="mt-4 border-t border-slate-100 pt-4">
 

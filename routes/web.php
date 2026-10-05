@@ -17,6 +17,7 @@ use App\Http\Controllers\{
     NotificationController,
     MaintenanceEvidenceController,
     WorkOrderController,
+    MaintenanceRequestController,
 };
 
 /*
@@ -83,15 +84,6 @@ Route::middleware('auth')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->middleware('permission:dashboard')
         ->name('dashboard');
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Work Orders
-    |--------------------------------------------------------------------------
-    */
-
-    Route::resource('work-orders', WorkOrderController::class);
 
 
     /*
@@ -247,57 +239,72 @@ Route::middleware('auth')->group(function () {
 
     /*
     |--------------------------------------------------------------------------
-    | Maintenance
+    | Maintenance (Request -> Approval -> Work Order) + Preventive
     |--------------------------------------------------------------------------
+    |
+    | Akses modul dilindungi permission "maintenance". Hak aksi per-record
+    | (siapa boleh approve / assign / start / dst.) diperiksa di Policy:
+    | MaintenanceRequestPolicy dan WorkOrderPolicy.
+    |
     */
 
-    Route::middleware('permission:maintenance')
-        ->prefix('maintenance')
-        ->name('maintenance.')
-        ->group(function () {
+    Route::middleware('permission:maintenance')->group(function () {
 
-            Route::get(
-                '/',
-                [MaintenanceController::class, 'index']
-            )->name('index');
+        /*
+        |----------------------------------------------------------------------
+        | Work Orders
+        |----------------------------------------------------------------------
+        | destroy tidak disediakan: Work Order dibatalkan (cancel), bukan dihapus.
+        */
 
-            Route::post(
-                '/',
-                [MaintenanceController::class, 'store']
-            )->name('store');
+        Route::resource('work-orders', WorkOrderController::class)
+            ->except(['destroy']);
 
-            Route::post(
-                '/{maintenance}/status',
-                [MaintenanceController::class, 'updateStatus']
-            )->name('status');
+        Route::prefix('work-orders/{workOrder}')
+            ->name('work-orders.')
+            ->where(['workOrder' => '[0-9]+'])
+            ->group(function () {
+                Route::post('/assign', [WorkOrderController::class, 'assign'])->name('assign');
+                Route::post('/start', [WorkOrderController::class, 'start'])->name('start');
+                Route::post('/hold', [WorkOrderController::class, 'hold'])->name('hold');
+                Route::post('/resume', [WorkOrderController::class, 'resume'])->name('resume');
+                Route::post('/complete', [WorkOrderController::class, 'complete'])->name('complete');
+                Route::post('/cancel', [WorkOrderController::class, 'cancel'])->name('cancel');
+            });
 
 
-            /*
-            |--------------------------------------------------------------------------
-            | Preventive Maintenance
-            |--------------------------------------------------------------------------
-            */
+        /*
+        |----------------------------------------------------------------------
+        | Maintenance Request
+        |----------------------------------------------------------------------
+        */
 
-            Route::prefix('preventive')
-                ->name('preventive.')
-                ->group(function () {
+        Route::prefix('maintenance')
+            ->name('maintenance.')
+            ->group(function () {
 
-                    Route::get(
-                        '/',
-                        [PreventiveMaintenanceController::class, 'index']
-                    )->name('index');
+                Route::get('/', [MaintenanceRequestController::class, 'index'])->name('index');
+                Route::post('/', [MaintenanceRequestController::class, 'store'])->name('store');
 
-                    Route::post(
-                        '/',
-                        [PreventiveMaintenanceController::class, 'store']
-                    )->name('store');
+                /*
+                | Preventive Maintenance
+                | (didaftarkan SEBELUM route {maintenanceRequest} agar tidak tertabrak)
+                */
+                Route::prefix('preventive')
+                    ->name('preventive.')
+                    ->group(function () {
+                        Route::get('/', [PreventiveMaintenanceController::class, 'index'])->name('index');
+                        Route::post('/', [PreventiveMaintenanceController::class, 'store'])->name('store');
+                        Route::patch('/{id}/complete', [PreventiveMaintenanceController::class, 'complete'])->name('complete');
+                    });
 
-                    Route::patch(
-                        '/{id}/complete',
-                        [PreventiveMaintenanceController::class, 'complete']
-                    )->name('complete');
+                Route::where(['maintenanceRequest' => '[0-9]+'])->group(function () {
+                    Route::get('/{maintenanceRequest}', [MaintenanceRequestController::class, 'show'])->name('show');
+                    Route::post('/{maintenanceRequest}/approve', [MaintenanceRequestController::class, 'approve'])->name('approve');
+                    Route::post('/{maintenanceRequest}/reject', [MaintenanceRequestController::class, 'reject'])->name('reject');
                 });
-        });
+            });
+    });
 
 
     /*

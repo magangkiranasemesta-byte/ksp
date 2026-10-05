@@ -1,411 +1,427 @@
-/* =========================================================
-   GLOBAL RESPONSIVE LAYOUT
-   ========================================================= */
+/* ==========================================================================
+   KSP - RESPONSIVE LAYOUT & COOKIE BANNER
+   --------------------------------------------------------------------------
+   Dipakai oleh:
+   - layouts/app.blade.php  (sidebar, header, hamburger, banner)
+   - halaman login / register / pilih akses (hanya banner)
 
-html,
-body {
-    overflow-x: hidden;
+   Catatan: selector sidebar memakai ID (#ksp-...) supaya menang atas class
+   utility Tailwind CDN (w-64, sticky, max-h-screen, px-8, p-8, dst.).
+   Breakpoint:
+     Desktop        : >= 1024px
+     Tablet/Mobile  : <  1024px
+     Mobile kecil   : <  640px
+   ========================================================================== */
+
+
+/* ==========================================================================
+   1. HAMBURGER BUTTON
+   Ikon 3 garis -> berubah menjadi X saat sidebar terbuka (aria-expanded=true)
+   ========================================================================== */
+
+.ksp-hamburger {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 0.75rem;
+    background: #ffffff;
+    color: #334155;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    cursor: pointer;
+    touch-action: manipulation; /* hilangkan delay & zoom saat double-tap */
+    -webkit-tap-highlight-color: transparent;
+    transition: background-color 0.15s ease, border-color 0.15s ease,
+                color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
+}
+
+/* Hover hanya untuk perangkat dengan mouse (di layar sentuh hover suka "menempel") */
+@media (hover: hover) {
+    .ksp-hamburger:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #0f172a;
+        box-shadow: 0 2px 8px rgba(15, 23, 42, 0.1);
+    }
+}
+
+.ksp-hamburger:active {
+    transform: scale(0.94);
+}
+
+.ksp-hamburger:focus-visible {
+    outline: 2px solid #2563eb;
+    outline-offset: 2px;
+}
+
+/* Sidebar sedang terbuka */
+.ksp-hamburger[aria-expanded="true"] {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+    color: #2563eb;
+}
+
+.ksp-hamburger__icon {
+    position: relative;
+    display: block;
+    width: 18px;
+    height: 14px;
+}
+
+.ksp-hamburger__bar {
+    position: absolute;
+    left: 0;
+    display: block;
+    width: 100%;
+    height: 2px;
+    border-radius: 2px;
+    background: currentColor;
+    transition: transform 0.25s ease, top 0.25s ease,
+                width 0.25s ease, opacity 0.2s ease;
+}
+
+.ksp-hamburger__bar:nth-child(1) { top: 0; }
+.ksp-hamburger__bar:nth-child(2) { top: 6px; width: 70%; }
+.ksp-hamburger__bar:nth-child(3) { top: 12px; }
+
+.ksp-hamburger[aria-expanded="true"] .ksp-hamburger__bar:nth-child(1) {
+    top: 6px;
+    transform: rotate(45deg);
+}
+
+.ksp-hamburger[aria-expanded="true"] .ksp-hamburger__bar:nth-child(2) {
+    width: 0;
+    opacity: 0;
+}
+
+.ksp-hamburger[aria-expanded="true"] .ksp-hamburger__bar:nth-child(3) {
+    top: 6px;
+    transform: rotate(-45deg);
 }
 
 
-/* =========================================================
-   SIDEBAR
-   ========================================================= */
+/* ==========================================================================
+   2. SIDEBAR - BASE
+   ========================================================================== */
 
-.mx-sidebar {
-    z-index: 100;
-    transition:
-        transform 0.25s ease,
-        box-shadow 0.25s ease;
+#ksp-sidebar {
+    transition: margin-left 0.25s ease, transform 0.25s ease, visibility 0s;
+}
+
+#ksp-sidebar-overlay {
+    display: none;
+}
+
+html.ksp-no-scroll,
+html.ksp-no-scroll body {
+    overflow: hidden;
+}
+
+html {
+    -webkit-text-size-adjust: 100%; /* cegah font membesar sendiri saat HP diputar */
+    text-size-adjust: 100%;
+}
+
+#ksp-main {
+    min-width: 0;
+    max-width: 100%;
+}
+
+/* Dropdown notifikasi tidak boleh lebih lebar dari layar. */
+#notification-dropdown {
+    max-width: calc(100vw - 1.5rem);
 }
 
 
-/* =========================================================
-   DESKTOP
-   >= 1024px
-   ========================================================= */
+/* ==========================================================================
+   3. DESKTOP (>= 1024px) - sidebar bisa ditutup (collapsed)
+   ========================================================================== */
 
 @media (min-width: 1024px) {
-
-    .mx-sidebar {
-        position: sticky;
-        top: 0;
-
-        height: 100vh;
-        min-height: 100vh;
-
-        transform: translateX(0);
-    }
-
-    .mx-sidebar-toggle,
-    .mx-sidebar-overlay {
-        display: none !important;
-    }
-}
-
-
-/* =========================================================
-   TABLET + MOBILE
-   <= 1023px
-   ========================================================= */
-
-@media (max-width: 1023px) {
-
-     #app-main {
-        width: 100% !important;
-        max-width: 100% !important;
-
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    .mx-page-content {
-        width: 100% !important;
-        max-width: 100% !important;
-
-        box-sizing: border-box;
-    }
-
-    .mx-sidebar {
-        position: fixed !important;
-
-        top: 0 !important;
-        left: 0 !important;
-        bottom: 0 !important;
-
-        width: min(82vw, 290px) !important;
-
-        height: 100vh !important;
-        max-height: 100vh !important;
-
-        margin: 0 !important;
-
-        transform: translateX(-110%) !important;
-
-        transition: transform 0.25s ease;
-
-        z-index: 1000 !important;
-
-        overflow-y: auto;
-    }
-
-    .mx-sidebar.is-open {
-        transform: translateX(0) !important;
-    }
-
-    .mx-main {
-        width: 100% !important;
-        min-width: 0 !important;
-        margin-left: 0 !important;
-    }
-    /*
-     * Overlay
-     */
-
-    .mx-sidebar-overlay {
-        position: fixed;
-
-        inset: 0;
-
-        z-index: 90;
-
-        display: block;
-
-        background: rgba(15, 23, 42, 0.52);
-
-        opacity: 0;
-
+    /* 16rem = lebar w-64 pada sidebar */
+    html.ksp-sidebar-collapsed #ksp-sidebar {
+        margin-left: -16rem;
         visibility: hidden;
-
-        pointer-events: none;
-
-        transition:
-            opacity 0.25s ease,
-            visibility 0.25s ease;
-    }
-
-
-    /*
-     * Overlay aktif
-     */
-
-    .mx-sidebar-overlay.is-visible {
-        opacity: 1;
-
-        visibility: visible;
-
-        pointer-events: auto;
-    }
-
-
-    /*
-     * Hamburger
-     */
-
-    .mx-sidebar-toggle {
-        display: inline-flex;
-
-        align-items: center;
-        justify-content: center;
-
-        width: 42px;
-        height: 42px;
-
-        flex: 0 0 42px;
-
-        margin-right: 12px;
-
-        border: 1px solid #e2e8f0;
-
-        border-radius: 10px;
-
-        background: #ffffff;
-
-        color: #334155;
-
-        cursor: pointer;
-
-        transition:
-            background 0.2s ease,
-            color 0.2s ease,
-            border-color 0.2s ease;
-    }
-
-
-    .mx-sidebar-toggle:hover {
-        background: #f8fafc;
-
-        color: #2563eb;
-
-        border-color: #bfdbfe;
-    }
-
-
-    /*
-     * Main content
-     */
-
-    /* .mx-main {
-        width: 100%;
-
-        min-width: 0;
-    } */
-
-
-    /*
-     * Header
-     */
-
-    .mx-topbar {
-        padding-left: 18px !important;
-        padding-right: 18px !important;
-    }
-
-
-    /*
-     * Page content
-     */
-
-    .mx-page-content {
-        padding: 24px !important;
-    }
-
-
-    /*
-     * Disable scroll body ketika sidebar terbuka
-     */
-
-    body.sidebar-open {
-        overflow: hidden;
+        transition: margin-left 0.25s ease, visibility 0s linear 0.25s;
     }
 }
 
 
-/* =========================================================
-   MOBILE
-   <= 640px
-   ========================================================= */
+/* ==========================================================================
+   4. TABLET & MOBILE (< 1024px) - sidebar menjadi drawer
+   ========================================================================== */
 
-@media (max-width: 640px) {
+@media (max-width: 1023.98px) {
 
-    /*
-     * Header
-     */
-
-    .mx-topbar {
-        min-height: 72px;
-
-        padding-top: 12px !important;
-        padding-bottom: 12px !important;
+    #ksp-sidebar {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        height: 100vh;
+        height: 100dvh;
+        max-height: none;
+        width: 16rem;
+        max-width: 85vw;
+        z-index: 60;
+        transform: translateX(-100%);
+        visibility: hidden;
+        transition: transform 0.25s ease, visibility 0s linear 0.25s;
     }
 
-
-    /*
-     * Content
-     */
-
-    .mx-page-content {
-        padding: 16px !important;
+    html.ksp-sidebar-open #ksp-sidebar {
+        transform: translateX(0);
+        visibility: visible;
+        transition: transform 0.25s ease, visibility 0s;
     }
 
+    #ksp-sidebar-overlay {
+        display: block;
+        position: fixed;
+        inset: 0;
+        z-index: 55;
+        background: rgba(15, 23, 42, 0.55);
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.25s ease, visibility 0s linear 0.25s;
+    }
 
-    /*
-     * Page title
-     */
+    html.ksp-sidebar-open #ksp-sidebar-overlay {
+        opacity: 1;
+        visibility: visible;
+        transition: opacity 0.25s ease, visibility 0s;
+    }
 
-    .mx-topbar h1 {
-        max-width: 55vw;
+    #ksp-header {
+        padding-left: 1rem;
+        padding-right: 1rem;
+        gap: 0.75rem;
+    }
 
-        overflow: hidden;
-
-        text-overflow: ellipsis;
-
+    #ksp-header h1 {
+        font-size: 1.25rem;
         white-space: nowrap;
-
-        font-size: 1.15rem !important;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
-
-    /*
-     * Subtitle
-     */
-
-    .mx-topbar .tracking-widest {
-        font-size: 9px !important;
+    /* Tabel/konten lebar scroll di dalam konten, bukan seluruh halaman. */
+    #ksp-content {
+        padding: 1rem;
+        overflow-x: auto;
     }
 
+    .ksp-hamburger {
+        width: 44px;
+        height: 44px;
+    }
+}
 
-    /*
-     * Notification
-     */
 
+/* ==========================================================================
+   5. MOBILE KECIL (< 640px)
+   ========================================================================== */
+
+@media (max-width: 639.98px) {
+
+    /* Dropdown notifikasi mengikuti lebar layar, bukan posisi lonceng. */
     #notification-dropdown {
-        position: fixed !important;
-
-        top: 64px !important;
-
-        left: 12px !important;
-        right: 12px !important;
-
-        width: auto !important;
-
-        max-width: none !important;
+        position: fixed;
+        top: 4.25rem;
+        left: 0.75rem;
+        right: 0.75rem;
+        width: auto;
+        max-width: none;
     }
+}
 
 
-    /*
-     * User information pada header
-     */
-
-    .mx-topbar .text-right {
+/* HP kecil & lipat (< 480px): sisakan ruang untuk judul halaman.
+   Nama user & role tetap terlihat di bagian bawah sidebar. */
+@media (max-width: 479.98px) {
+    #ksp-header .ksp-header-user {
         display: none;
     }
 
+    #ksp-header {
+        gap: 0.5rem;
+    }
 
-    /*
-     * Table wrapper
-     */
+    #ksp-header h1 {
+        font-size: 1.125rem;
+    }
+}
 
-    .table-wrapper {
+/* HP landscape (tinggi pendek): kurangi padding header & drawer */
+@media (max-height: 480px) and (max-width: 1023.98px) {
+    #ksp-header {
+        padding-top: 0.5rem;
+        padding-bottom: 0.5rem;
+    }
+}
+
+/* Eyebrow tidak boleh menimpa elemen lain di layar menengah */
+#ksp-header .ksp-header-eyebrow {
+    display: block;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@media (max-width: 479.98px) {
+    #ksp-header .ksp-header-eyebrow {
+        display: none;
+    }
+}
+
+
+/* ==========================================================================
+   6. COOKIE BANNER
+   ========================================================================== */
+
+.ksp-cookie-banner {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 45; /* di bawah drawer (60) & overlay (55), tidak menutupi header */
+    box-sizing: border-box;
+    padding: 0.75rem;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom, 0px));
+    pointer-events: none; /* area kosong di sekitar kartu tetap bisa diklik */
+    transition: opacity 0.25s ease, transform 0.25s ease;
+}
+
+.ksp-cookie-banner.is-hiding {
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+.ksp-cookie-banner__inner {
+    pointer-events: auto;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    max-width: 62rem;
+    margin: 0 auto;
+    padding: 1rem 1.25rem;
+    /* Selalu sisakan ruang di atas agar header/hamburger tidak tertutup. */
+    max-height: calc(100vh - 6rem);
+    max-height: calc(100dvh - 6rem);
+    overflow-y: auto;
+    border: 1px solid #1e293b;
+    border-radius: 0.875rem;
+    background: #0b132b;
+    color: #e2e8f0;
+    box-shadow: 0 12px 40px rgba(2, 6, 23, 0.4);
+    font-family: inherit;
+}
+
+.ksp-cookie-banner__text {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+.ksp-cookie-banner__title {
+    display: block;
+    margin: 0 0 0.25rem;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #ffffff;
+}
+
+.ksp-cookie-banner__desc {
+    margin: 0;
+    font-size: 0.8125rem;
+    line-height: 1.55;
+    color: #cbd5e1;
+    overflow-wrap: anywhere;
+}
+
+.ksp-cookie-banner__actions {
+    display: flex;
+    flex-shrink: 0;
+    gap: 0.5rem;
+}
+
+.ksp-cookie-btn {
+    box-sizing: border-box;
+    min-height: 44px; /* target sentuh yang nyaman */
+    padding: 0 1.25rem;
+    border: 1px solid transparent;
+    border-radius: 0.625rem;
+    font-family: inherit;
+    font-size: 0.875rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: background-color 0.15s ease, border-color 0.15s ease;
+}
+
+.ksp-cookie-btn:focus-visible {
+    outline: 2px solid #93c5fd;
+    outline-offset: 2px;
+}
+
+.ksp-cookie-btn--ghost {
+    background: transparent;
+    border-color: #475569;
+    color: #e2e8f0;
+}
+
+@media (hover: hover) {
+    .ksp-cookie-btn--ghost:hover {
+        background: #1e293b;
+    }
+}
+
+.ksp-cookie-btn--primary {
+    background: #2563eb;
+    color: #ffffff;
+}
+
+@media (hover: hover) {
+    .ksp-cookie-btn--primary:hover {
+        background: #1d4ed8;
+    }
+}
+
+/* Tablet kecil & mobile: kartu menumpuk, tombol selebar kartu */
+@media (max-width: 640px) {
+    .ksp-cookie-banner {
+        padding: 0.5rem;
+        padding-bottom: calc(0.5rem + env(safe-area-inset-bottom, 0px));
+    }
+
+    .ksp-cookie-banner__inner {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 0.875rem;
+        padding: 1rem;
+    }
+
+    .ksp-cookie-banner__actions {
         width: 100%;
-
-        max-width: 100%;
-
-        overflow-x: auto;
-
-        -webkit-overflow-scrolling: touch;
     }
 
-
-    /*
-     * Table
-     */
-
-    table {
-        min-width: 700px;
-    }
-
-
-    /*
-     * Tombol
-     */
-
-    .actions {
-        flex-wrap: wrap;
-    }
-
-
-    /*
-     * Modal
-     */
-
-    .modal {
-        padding: 12px;
-    }
-
-
-    .modal-card {
-        max-height: calc(100vh - 24px);
-
-        padding: 18px;
-    }
-
-
-    /*
-     * Text panjang
-     */
-
-    td,
-    th,
-    .desc {
-        overflow-wrap: anywhere;
+    .ksp-cookie-btn {
+        flex: 1 1 0;
     }
 }
-
-
-/* =========================================================
-   EXTRA SMALL
-   <= 420px
-   ========================================================= */
-
-@media (max-width: 420px) {
-
-    .mx-sidebar {
-        width: min(88vw, 290px) !important;
-    }
-
-
-    .mx-sidebar-toggle {
-        width: 40px;
-
-        height: 40px;
-
-        flex-basis: 40px;
-
-        margin-right: 9px;
-    }
-
-
-    .mx-page-content {
-        padding: 12px !important;
-    }
-
-
-    .stats-grid {
-        grid-template-columns: 1fr !important;
-    }
-}
-
-
-/* =========================================================
-   REDUCE MOTION
-   ========================================================= */
 
 @media (prefers-reduced-motion: reduce) {
-
-    .mx-sidebar,
-    .mx-sidebar-overlay,
-    .mx-sidebar-toggle {
-        transition: none;
+    #ksp-sidebar,
+    #ksp-sidebar-overlay,
+    .ksp-hamburger,
+    .ksp-hamburger__bar,
+    .ksp-cookie-banner {
+        transition: none !important;
     }
 }

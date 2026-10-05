@@ -10,6 +10,8 @@
     <style>
         body { font-family: 'Inter', sans-serif; }
     </style>
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
+    <script src="{{ asset('js/cookies.js') }}" defer></script>
 </head>
 <body class="bg-gradient-to-br from-[#0d0714] via-[#0f172a] to-[#1e0a24] text-slate-100 min-h-screen flex flex-col justify-between p-6 relative overflow-x-hidden antialiased">
 
@@ -195,5 +197,6 @@
         </div>
     </div>
 
+    @include('partials.cookie-consent')
 </body>
 </html>

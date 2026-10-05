@@ -10,8 +10,9 @@
     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
         <div>
             <h2 class="text-xl font-bold text-slate-900">Maintenance Request</h2>
-            <p class="text-xs text-slate-500 mt-0.5">Kelola request dan alur approval: <span class="font-semibold text-slate-700">Engineer → Supervisor → Manager</span>.</p>
+            <p class="text-xs text-slate-500 mt-0.5">Kelola request dan alur approval: <span class="font-semibold text-slate-700">Engineer → Supervisor → Manager → Work Order</span>.</p>
         </div>
+        @can('create', \App\Models\MaintenanceRequest::class)
         <button 
             type="button" 
             onclick="document.getElementById('requestModal').classList.remove('hidden'); document.getElementById('requestModal').classList.add('flex');"
@@ -19,6 +20,7 @@
         >
             <span class="text-lg leading-none">+</span> Request Maintenance
         </button>
+        @endcan
     </div>
 
     <!-- Main Card: Search & Table -->
@@ -104,51 +106,43 @@
                                 </span>
                             </td>
                             <td class="py-4 px-5 text-right">
-                                <div class="flex items-center justify-end gap-1.5">
-                                    {{-- SUPERVISOR APPROVAL --}}
-                                    @if(strtoupper(auth()->user()->role) === 'SUPERVISOR' && $r->status === 'PENDING_SUPERVISOR')
-                                        <form method="POST" action="{{ route('maintenance.status', $r) }}">
-                                            @csrf
-                                            <input type="hidden" name="status" value="PENDING_MANAGER">
-                                            <button class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">Approve</button>
-                                        </form>
-                                        <form method="POST" action="{{ route('maintenance.status', $r) }}">
-                                            @csrf
-                                            <input type="hidden" name="status" value="REJECTED">
-                                            <button class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">Reject</button>
-                                        </form>
+                                <div class="flex flex-wrap items-center justify-end gap-1.5">
+                                    <a href="{{ route('maintenance.show', $r) }}"
+                                       class="inline-flex items-center min-h-[36px] px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold rounded-lg transition">
+                                        Detail
+                                    </a>
 
-                                    {{-- MANAGER APPROVAL --}}
-                                    @elseif(strtoupper(auth()->user()->role) === 'MANAGER' && $r->status === 'PENDING_MANAGER')
-                                        <form method="POST" action="{{ route('maintenance.status', $r) }}">
+                                    @can('approve', $r)
+                                        <form method="POST" action="{{ route('maintenance.approve', $r) }}"
+                                              onsubmit="return confirm('Setujui Maintenance Request #{{ $r->id }}?')">
                                             @csrf
-                                            <input type="hidden" name="status" value="APPROVED">
-                                            <button class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">Approve</button>
+                                            <button class="min-h-[36px] px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">Approve</button>
                                         </form>
-                                        <form method="POST" action="{{ route('maintenance.status', $r) }}">
-                                            @csrf
-                                            <input type="hidden" name="status" value="REJECTED">
-                                            <button class="px-2.5 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">Reject</button>
-                                        </form>
+                                    @endcan
 
-                                    {{-- ENGINEER START --}}
-                                    @elseif(strtoupper(auth()->user()->role) === 'ENGINEER' && $r->engineer_id === auth()->id() && $r->status === 'APPROVED')
-                                        <form method="POST" action="{{ route('maintenance.status', $r) }}">
+                                    @can('reject', $r)
+                                        <form method="POST" action="{{ route('maintenance.reject', $r) }}"
+                                              onsubmit="var r = prompt('Alasan penolakan (min. 5 karakter):'); if (!r || r.trim().length < 5) { alert('Alasan penolakan wajib diisi (min. 5 karakter).'); return false; } this.note.value = r.trim(); return true;">
                                             @csrf
-                                            <input type="hidden" name="status" value="IN_PROGRESS">
-                                            <button class="px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">Start</button>
+                                            <input type="hidden" name="note" value="">
+                                            <button class="min-h-[36px] px-3 py-1 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">Reject</button>
                                         </form>
+                                    @endcan
 
-                                    {{-- ENGINEER COMPLETE --}}
-                                    @elseif(strtoupper(auth()->user()->role) === 'ENGINEER' && $r->engineer_id === auth()->id() && $r->status === 'IN_PROGRESS')
-                                        <form method="POST" action="{{ route('maintenance.status', $r) }}">
-                                            @csrf
-                                            <input type="hidden" name="status" value="COMPLETED">
-                                            <button class="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">Complete</button>
-                                        </form>
-
-                                    @else
-                                        <span class="text-slate-300 font-bold px-2">—</span>
+                                    @if($r->status === 'APPROVED')
+                                        @if($r->workOrder)
+                                            <a href="{{ route('work-orders.show', $r->workOrder) }}"
+                                               class="inline-flex items-center min-h-[36px] px-3 py-1 bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold rounded-lg transition">
+                                                {{ $r->workOrder->wo_number }}
+                                            </a>
+                                        @else
+                                            @can('create', \App\Models\WorkOrder::class)
+                                                <a href="{{ route('work-orders.create', ['maintenance_request_id' => $r->id]) }}"
+                                                   class="inline-flex items-center min-h-[36px] px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-lg shadow-sm transition">
+                                                    Buat WO
+                                                </a>
+                                            @endcan
+                                        @endif
                                     @endif
                                 </div>
                             </td>

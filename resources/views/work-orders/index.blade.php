@@ -38,6 +38,7 @@
             </div>
         </div>
 
+@can('create', \App\Models\WorkOrder::class)
         <a href="{{ route('work-orders.create') }}"
            class="inline-flex items-center justify-center gap-2
                   px-4 py-2.5
@@ -62,6 +63,7 @@
 
             Buat Work Order
         </a>
+@endcan
 
     </div>
 
@@ -820,6 +822,8 @@
                                         </a>
 
 
+                                        @if(in_array($workOrder->status, ['OPEN', 'ASSIGNED']))
+                                        @can('update', $workOrder)
                                         <a href="{{ route('work-orders.edit', $workOrder) }}"
                                            title="Edit"
                                            class="w-9 h-9
@@ -848,6 +852,8 @@
                                             </svg>
 
                                         </a>
+                                        @endcan
+                                        @endif
 
                                     </div>
 
@@ -908,6 +914,7 @@
                     Buat Work Order baru untuk memulai proses maintenance.
                 </p>
 
+                @can('create', \App\Models\WorkOrder::class)
                 <a href="{{ route('work-orders.create') }}"
                    class="inline-flex items-center gap-2
                           mt-6
@@ -933,6 +940,7 @@
                     Buat Work Order
 
                 </a>
+                @endcan
 
             </div>
 

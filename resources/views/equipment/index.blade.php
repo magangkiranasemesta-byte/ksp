@@ -8,7 +8,7 @@
 
 <div class="space-y-6">
 
-```
+
 {{-- Header Section & Actions --}}
 <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200/80 shadow-sm">
 
@@ -202,7 +202,6 @@
     @endif
 
 </div>
-```
 
 </div>
 
@@ -213,7 +212,7 @@
     class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm hidden items-center justify-center p-4"
 >
 
-```
+
 <div class="bg-white w-full max-w-lg rounded-2xl shadow-xl border border-slate-200 overflow-hidden relative animate-in fade-in zoom-in-95 duration-150">
 
     {{-- Modal Header --}}
@@ -358,7 +357,7 @@
     </form>
 
 </div>
-```
+
 
 </div>
 

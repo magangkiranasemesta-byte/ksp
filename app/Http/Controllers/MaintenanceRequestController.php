@@ -2,385 +2,282 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ApprovalHistory;
 use App\Models\Equipment;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
+use App\Services\NotificationService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
+/**
+ * Maintenance Request + alur approval.
+ *
+ *   Engineer -> PENDING_SUPERVISOR -> PENDING_MANAGER -> APPROVED -> (Work Order)
+ *                      \______________ REJECTED ______________/
+ *
+ * Eksekusi pekerjaan (start/hold/resume/complete) TIDAK lagi dilakukan di sini,
+ * melainkan di Work Order.
+ */
 class MaintenanceRequestController extends Controller
 {
-    /**
-     * Display a listing of maintenance requests.
-     */
+    private const TECHNICIAN_ROLES = ['ENGINEER', 'TECHNICIAN'];
+
     public function index(Request $request)
     {
-        $query = MaintenanceRequest::with([
-            'equipment',
-            'engineer',
-            'workOrder',
-        ])->latest();
+        Gate::authorize('viewAny', MaintenanceRequest::class);
 
-        // Search
+        $user = $request->user();
+
+        $query = MaintenanceRequest::with(['equipment', 'engineer', 'workOrder'])->latest();
+
+        // Engineer hanya melihat request miliknya.
+        if (strtoupper((string) $user->role) === 'ENGINEER') {
+            $query->where('engineer_id', $user->id);
+        }
+
         if ($request->filled('search')) {
-            $search = $request->search;
+            $search = trim($request->input('search'));
 
             $query->where(function ($q) use ($search) {
+                if (ctype_digit($search)) {
+                    $q->orWhere('id', (int) $search);
+                }
 
-                $q->where(
-                    'description',
-                    'like',
-                    "%{$search}%"
-                )
-
-                ->orWhere(
-                    'priority',
-                    'like',
-                    "%{$search}%"
-                )
-
-                ->orWhere(
-                    'status',
-                    'like',
-                    "%{$search}%"
-                )
-
-                ->orWhereHas(
-                    'equipment',
-                    function ($equipment) use ($search) {
-
-                        $equipment
-                            ->where(
-                                'name',
-                                'like',
-                                "%{$search}%"
-                            )
-                            ->orWhere(
-                                'equipment_code',
-                                'like',
-                                "%{$search}%"
-                            );
-                    }
-                )
-
-                ->orWhereHas(
-                    'engineer',
-                    function ($engineer) use ($search) {
-
-                        $engineer->where(
-                            'username',
-                            'like',
-                            "%{$search}%"
-                        );
-                    }
-                );
+                $q->orWhere('description', 'like', "%{$search}%")
+                    ->orWhere('priority', 'like', "%{$search}%")
+                    ->orWhere('status', 'like', "%{$search}%")
+                    ->orWhereHas('equipment', function ($equipment) use ($search) {
+                        $equipment->where('name', 'like', "%{$search}%")
+                            ->orWhere('equipment_code', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('engineer', function ($engineer) use ($search) {
+                        $engineer->where('username', 'like', "%{$search}%");
+                    });
             });
         }
 
-        // Filter status
         if ($request->filled('status')) {
-            $query->where(
-                'status',
-                $request->status
-            );
+            $query->where('status', strtoupper($request->input('status')));
         }
 
-        // Filter priority
         if ($request->filled('priority')) {
-            $query->where(
-                'priority',
-                $request->priority
-            );
+            $query->where('priority', strtoupper($request->input('priority')));
         }
 
-        $maintenanceRequests = $query
-            ->paginate(10)
-            ->withQueryString();
+        $requests = $query->paginate(7)->withQueryString();
 
-        // Statistik
-        $total = MaintenanceRequest::count();
-
-        $pendingSupervisor = MaintenanceRequest::where(
-            'status',
-            'PENDING_SUPERVISOR'
-        )->count();
-
-        $pendingManager = MaintenanceRequest::where(
-            'status',
-            'PENDING_MANAGER'
-        )->count();
-
-        $approved = MaintenanceRequest::where(
-            'status',
-            'APPROVED'
-        )->count();
-
-        $rejected = MaintenanceRequest::where(
-            'status',
-            'REJECTED'
-        )->count();
-
-        return view(
-            'maintenance.index',
-            compact(
-                'maintenanceRequests',
-                'total',
-                'pendingSupervisor',
-                'pendingManager',
-                'approved',
-                'rejected'
-            )
-        );
-    }
-
-
-    /**
-     * Show create form.
-     */
-    public function create()
-    {
-        $equipment = Equipment::orderBy('name')
+        $equipment = Equipment::where('status', '<>', 'INACTIVE')
+            ->orderBy('name')
             ->get();
 
-        $engineers = User::whereIn('role', [
-            'ENGINEER',
-            'TECHNICIAN',
-        ])
+        $engineers = User::whereIn('role', self::TECHNICIAN_ROLES)
             ->orderBy('username')
             ->get();
 
-        return view(
-            'maintenance.create',
-            compact(
-                'equipment',
-                'engineers'
-            )
-        );
+        return view('maintenance.index', compact('requests', 'equipment', 'engineers'));
     }
 
-
-    /**
-     * Store maintenance request.
-     */
-    public function store(Request $request)
+    public function store(Request $request): RedirectResponse
     {
-        $validated = $request->validate([
+        Gate::authorize('create', MaintenanceRequest::class);
 
-            'equipment_id' => [
-                'required',
-                'exists:equipment,id',
-            ],
+        $user = $request->user();
 
-            'engineer_id' => [
-                'required',
-                'exists:users,id',
-            ],
-
-            'description' => [
-                'required',
-                'string',
-                'min:10',
-            ],
-
-            'priority' => [
-                'required',
-                'in:LOW,MEDIUM,HIGH,CRITICAL',
-            ],
+        $data = $request->validate([
+            'equipment_id' => ['required', 'exists:equipment,id'],
+            'engineer_id'  => ['nullable', 'exists:users,id'],
+            'priority'     => ['required', 'in:LOW,MEDIUM,HIGH,CRITICAL'],
+            'description'  => ['required', 'string', 'min:10', 'max:5000'],
         ]);
 
-        /*
-        |--------------------------------------------------------------------------
-        | Pastikan user yang dipilih memang Engineer / Technician
-        |--------------------------------------------------------------------------
-        */
+        $equipment = Equipment::findOrFail($data['equipment_id']);
 
-        $engineer = User::whereIn('role', [
-            'ENGINEER',
-            'TECHNICIAN',
-        ])
-            ->where(
-                'id',
-                $validated['engineer_id']
-            )
-            ->first();
-
-        if (!$engineer) {
-            return back()
-                ->withInput()
-                ->with(
-                    'warning',
-                    'User yang dipilih bukan Engineer atau Technician.'
-                );
+        if ($equipment->status === 'INACTIVE') {
+            return back()->withInput()->with('error', 'Equipment berstatus INACTIVE tidak dapat dibuatkan request.');
         }
 
-        /*
-        |--------------------------------------------------------------------------
-        | Status awal
-        |--------------------------------------------------------------------------
-        */
+        // Engineer selalu atas nama dirinya sendiri (tidak bisa dimanipulasi lewat request).
+        if (strtoupper((string) $user->role) === 'ENGINEER') {
+            $engineerId = $user->id;
+        } elseif (! empty($data['engineer_id'])) {
+            $engineer = User::whereIn('role', self::TECHNICIAN_ROLES)->find($data['engineer_id']);
 
-        $validated['status'] = 'PENDING_SUPERVISOR';
+            if (! $engineer) {
+                return back()->withInput()->with('error', 'User yang dipilih bukan Engineer.');
+            }
 
-        MaintenanceRequest::create(
-            $validated
+            $engineerId = $engineer->id;
+        } else {
+            $engineerId = $user->id;
+        }
+
+        $maintenanceRequest = MaintenanceRequest::create([
+            'equipment_id' => $equipment->id,
+            'engineer_id'  => $engineerId,
+            'priority'     => $data['priority'],
+            'description'  => $data['description'],
+            'status'       => 'PENDING_SUPERVISOR',
+        ]);
+
+        NotificationService::roles(
+            ['SUPERVISOR'],
+            'Maintenance Request baru',
+            "Request #{$maintenanceRequest->id} untuk {$equipment->name} menunggu persetujuan Supervisor.",
+            'approval',
+            route('maintenance.show', $maintenanceRequest)
         );
 
         return redirect()
             ->route('maintenance.index')
-            ->with(
-                'success',
-                'Maintenance Request berhasil dibuat dan menunggu approval Supervisor.'
-            );
+            ->with('success', "Maintenance Request #{$maintenanceRequest->id} berhasil dibuat dan menunggu approval Supervisor.");
     }
 
+    public function show(MaintenanceRequest $maintenanceRequest)
+    {
+        Gate::authorize('view', $maintenanceRequest);
 
-    /**
-     * Display maintenance request.
-     */
-    public function show(
-        MaintenanceRequest $maintenanceRequest
-    ) {
         $maintenanceRequest->load([
             'equipment',
             'engineer',
-            'approvals',
-            'workOrder',
+            'workOrder.technician',
+            'approvals' => fn ($q) => $q->with('user')->orderBy('created_at')->orderBy('id'),
         ]);
 
-        return view(
-            'maintenance.show',
-            compact(
-                'maintenanceRequest'
-            )
-        );
+        return view('maintenance.show', compact('maintenanceRequest'));
     }
 
+    public function approve(Request $request, MaintenanceRequest $maintenanceRequest): RedirectResponse
+    {
+        Gate::authorize('approve', $maintenanceRequest);
+
+        $request->validate(['note' => ['nullable', 'string', 'max:1000']]);
+
+        return $this->decide($request, $maintenanceRequest, 'approve');
+    }
+
+    public function reject(Request $request, MaintenanceRequest $maintenanceRequest): RedirectResponse
+    {
+        Gate::authorize('reject', $maintenanceRequest);
+
+        $request->validate(['note' => ['required', 'string', 'min:5', 'max:1000']], [
+            'note.required' => 'Alasan penolakan wajib diisi.',
+            'note.min'      => 'Alasan penolakan minimal 5 karakter.',
+        ]);
+
+        return $this->decide($request, $maintenanceRequest, 'reject');
+    }
 
     /**
-     * Show edit form.
+     * Proses approve/reject secara atomik.
+     * Status dibaca ulang dengan row lock agar dua approver tidak saling menimpa.
      */
-    public function edit(
-        MaintenanceRequest $maintenanceRequest
-    ) {
-        /*
-        |--------------------------------------------------------------------------
-        | Request yang sudah menjadi Work Order
-        | tidak boleh diedit sembarangan.
-        |--------------------------------------------------------------------------
-        */
+    private function decide(Request $request, MaintenanceRequest $maintenanceRequest, string $action): RedirectResponse
+    {
+        $user = $request->user();
+        $note = $request->filled('note') ? trim($request->input('note')) : null;
 
-        if ($maintenanceRequest->workOrder) {
-            return redirect()
-                ->route(
-                    'maintenance.show',
-                    $maintenanceRequest
-                )
-                ->with(
-                    'warning',
-                    'Maintenance Request yang sudah memiliki Work Order tidak dapat diedit.'
+        $result = DB::transaction(function () use ($maintenanceRequest, $user, $action, $note) {
+            $fresh = MaintenanceRequest::lockForUpdate()->findOrFail($maintenanceRequest->id);
+
+            if (! in_array($fresh->status, ['PENDING_SUPERVISOR', 'PENDING_MANAGER'], true)) {
+                return null; // sudah diproses orang lain
+            }
+
+            // Otorisasi ulang terhadap status terbaru.
+            abort_unless(Gate::forUser($user)->allows($action, $fresh), 403);
+
+            $from = $fresh->status;
+
+            $to = $action === 'reject'
+                ? 'REJECTED'
+                : ($from === 'PENDING_SUPERVISOR' ? 'PENDING_MANAGER' : 'APPROVED');
+
+            // saveQuietly: log dicatat manual di bawah agar tidak dobel.
+            $fresh->forceFill(['status' => $to])->saveQuietly();
+
+            ApprovalHistory::create([
+                'maintenance_id' => $fresh->id,
+                'user_id'        => $user->id,
+                'role'           => strtoupper((string) $user->role),
+                'action'         => $action === 'reject' ? 'REJECT' : 'APPROVE',
+                'note'           => $note,
+                'created_at'     => now(),
+            ]);
+
+            activity('maintenance_request')
+                ->performedOn($fresh)
+                ->causedBy($user)
+                ->event($action)
+                ->withProperties(['old_status' => $from, 'new_status' => $to, 'note' => $note])
+                ->log(
+                    $action === 'reject'
+                        ? "Maintenance Request #{$fresh->id} ditolak"
+                        : "Maintenance Request #{$fresh->id} disetujui ({$from} → {$to})"
                 );
+
+            return [$fresh, $from, $to];
+        });
+
+        if ($result === null) {
+            return back()->with('error', 'Request ini sudah diproses atau tidak lagi menunggu persetujuan.');
         }
 
-        $equipment = Equipment::orderBy('name')
-            ->get();
+        [$fresh, $from, $to] = $result;
 
-        $engineers = User::whereIn('role', [
-            'ENGINEER',
-            'TECHNICIAN',
-        ])
-            ->orderBy('username')
-            ->get();
+        $this->notifyDecision($fresh, $to, $note);
 
-        return view(
-            'maintenance.edit',
-            compact(
-                'maintenanceRequest',
-                'equipment',
-                'engineers'
-            )
-        );
+        $message = match ($to) {
+            'PENDING_MANAGER' => "Request #{$fresh->id} disetujui Supervisor dan diteruskan ke Manager.",
+            'APPROVED'        => "Request #{$fresh->id} disetujui. Work Order dapat dibuat.",
+            default           => "Request #{$fresh->id} ditolak.",
+        };
+
+        return back()->with('success', $message);
     }
 
-
-    /**
-     * Update maintenance request.
-     */
-    public function update(
-        Request $request,
-        MaintenanceRequest $maintenanceRequest
-    ) {
-        if ($maintenanceRequest->workOrder) {
-            return back()->with(
-                'warning',
-                'Maintenance Request yang sudah memiliki Work Order tidak dapat diperbarui.'
+    private function notifyDecision(MaintenanceRequest $mr, string $to, ?string $note): void
+    {
+        if ($to === 'PENDING_MANAGER') {
+            NotificationService::roles(
+                ['MANAGER'],
+                'Menunggu persetujuan Manager',
+                "Request #{$mr->id} telah disetujui Supervisor.",
+                'approval',
+                route('maintenance.show', $mr)
             );
+
+            return;
         }
 
-        $validated = $request->validate([
+        if ($to === 'APPROVED') {
+            NotificationService::user(
+                $mr->engineer,
+                'Maintenance Request disetujui',
+                "Request #{$mr->id} telah disetujui sepenuhnya.",
+                'success',
+                route('maintenance.show', $mr)
+            );
 
-            'equipment_id' => [
-                'required',
-                'exists:equipment,id',
-            ],
+            NotificationService::roles(
+                ['ADMIN'],
+                'Request siap dibuatkan Work Order',
+                "Request #{$mr->id} sudah APPROVED.",
+                'maintenance',
+                route('work-orders.create', ['maintenance_request_id' => $mr->id])
+            );
 
-            'engineer_id' => [
-                'required',
-                'exists:users,id',
-            ],
+            return;
+        }
 
-            'description' => [
-                'required',
-                'string',
-                'min:10',
-            ],
-
-            'priority' => [
-                'required',
-                'in:LOW,MEDIUM,HIGH,CRITICAL',
-            ],
-        ]);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Jangan izinkan edit biasa mengubah status approval.
-        |--------------------------------------------------------------------------
-        */
-
-        $maintenanceRequest->update(
-            $validated
+        NotificationService::user(
+            $mr->engineer,
+            'Maintenance Request ditolak',
+            "Request #{$mr->id} ditolak" . ($note ? ": {$note}" : '.'),
+            'warning',
+            route('maintenance.show', $mr)
         );
-
-        return redirect()
-            ->route(
-                'maintenance.show',
-                $maintenanceRequest
-            )
-            ->with(
-                'success',
-                'Maintenance Request berhasil diperbarui.'
-            );
-    }
-
-
-    /**
-     * Delete maintenance request.
-     */
-    public function destroy(
-        MaintenanceRequest $maintenanceRequest
-    ) {
-        if ($maintenanceRequest->workOrder) {
-            return back()->with(
-                'warning',
-                'Maintenance Request yang sudah memiliki Work Order tidak dapat dihapus.'
-            );
-        }
-
-        $maintenanceRequest->delete();
-
-        return redirect()
-            ->route('maintenance.index')
-            ->with(
-                'success',
-                'Maintenance Request berhasil dihapus.'
-            );
     }
 }

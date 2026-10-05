@@ -949,7 +949,7 @@
                                 ]))
 
                                     <a
-                                        href="{{ route('history') }}"
+                                        href="{{ route('history.index') }}"
                                         class="mt-5 inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-800"
                                     >
 

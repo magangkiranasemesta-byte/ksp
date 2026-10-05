@@ -8,6 +8,8 @@
     <title>Login - Equipment Maintenance System</title>
 
     <link rel="stylesheet" href="{{ asset('css/auth.css') }}">
+    <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
+    <script src="{{ asset('js/cookies.js') }}" defer></script>
 </head>
 
 <body>
@@ -228,6 +230,8 @@
     <!-- ========================================================= -->
     <!-- JAVASCRIPT -->
     <!-- ========================================================= -->
+
+    @include('partials.cookie-consent')
 
     <script src="{{ asset('js/auth.js') }}"></script>
 

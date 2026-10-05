@@ -1,5 +1,11 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-slate-100">
+@php
+    // Cookie preferensi UI hanya dipakai jika pengguna sudah menekan "Terima".
+    $kspConsent = request()->cookie('ksp_cookie_consent');
+    $kspSidebarCollapsed = $kspConsent === 'accepted'
+        && request()->cookie('ksp_sidebar_state') === 'collapsed';
+@endphp
+<html lang="id" class="h-full bg-slate-100 {{ $kspSidebarCollapsed ? 'ksp-sidebar-collapsed' : '' }}">
 
 <head>
 
@@ -30,8 +36,12 @@
         }
     </script>
 
-    @stack('styles')
+    <!-- Responsive layout + Cookie banner -->
     <link rel="stylesheet" href="{{ asset('css/responsive.css') }}">
+    <script src="{{ asset('js/cookies.js') }}" defer></script>
+    <script src="{{ asset('js/responsive.js') }}" defer></script>
+
+    @stack('styles')
 
 </head>
 
@@ -48,8 +58,8 @@
             ========================================================== -->
 
             <aside
-                id="app-sidebar"
-                class="mx-sidebar w-64 bg-[#0B132B] text-white flex flex-col justify-between
+                id="ksp-sidebar"
+                class="w-64 bg-[#0B132B] text-white flex flex-col justify-between
                        p-4 shrink-0 shadow-xl max-h-screen sticky top-0
                        overflow-y-auto">
 
@@ -695,15 +705,8 @@
 
             </aside>
 
-             <!-- =========================================================
-                 MOBILE SIDEBAR OVERLAY
-            ========================================================== -->
-
-            <div
-                id="sidebar-overlay"
-                class="mx-sidebar-overlay"
-                aria-hidden="true">
-            </div>
+            <!-- Overlay drawer (tablet/mobile) -->
+            <div id="ksp-sidebar-overlay" aria-hidden="true"></div>
 
 
 
@@ -712,8 +715,8 @@
             ========================================================== -->
 
             <main
-                id="app-main"
-                class="mx-main flex-1 flex flex-col
+                id="ksp-main"
+                class="flex-1 flex flex-col
                        min-w-0">
 
 
@@ -722,7 +725,8 @@
                 ====================================================== -->
 
                 <header
-                    class="mx-topbar bg-white
+                    id="ksp-header"
+                    class="bg-white
                            border-b border-slate-200
                            px-8 py-4
                            flex items-center
@@ -730,45 +734,33 @@
                            relative
                            z-50">
 
-                                       <!-- =================================================
-                         MOBILE HAMBURGER
-                    ================================================== -->
-
-                    <button
-                        type="button"
-                        id="sidebar-toggle"
-                        class="mx-sidebar-toggle"
-                        aria-label="Buka menu navigasi"
-                        aria-controls="app-sidebar"
-                        aria-expanded="false">
-
-                        <svg
-                            class="w-6 h-6"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                            aria-hidden="true">
-
-                            <path
-                                stroke-linecap="round"
-                                stroke-linejoin="round"
-                                stroke-width="2"
-                                d="M4 6h16M4 12h16M4 18h16">
-                            </path>
-
-                        </svg>
-
-                    </button>
-
 
                     <!-- =================================================
                          PAGE TITLE
                     ================================================== -->
 
-                    <div>
+                    <div class="flex items-center gap-3 min-w-0">
+
+                        <!-- HAMBURGER (buka/tutup sidebar) -->
+                        <button
+                            type="button"
+                            id="ksp-sidebar-toggle"
+                            class="ksp-hamburger"
+                            aria-label="Buka atau tutup menu"
+                            aria-controls="ksp-sidebar"
+                            aria-expanded="false"
+                            title="Menu">
+                            <span class="ksp-hamburger__icon" aria-hidden="true">
+                                <span class="ksp-hamburger__bar"></span>
+                                <span class="ksp-hamburger__bar"></span>
+                                <span class="ksp-hamburger__bar"></span>
+                            </span>
+                        </button>
+
+                        <div class="min-w-0">
 
                         <span
-                            class="text-xs font-bold
+                            class="ksp-header-eyebrow text-xs font-bold
                                    text-blue-600
                                    uppercase
                                    tracking-widest">
@@ -786,6 +778,8 @@
                             @yield('page_title', 'Dashboard')
 
                         </h1>
+
+                        </div>
 
                     </div>
 
@@ -1367,7 +1361,7 @@
                              USER INFORMATION
                         ================================================== -->
 
-                        <div class="text-right">
+                        <div class="ksp-header-user text-right">
 
                             <span
                                 class="
@@ -1410,14 +1404,13 @@
 
 
 
-
                 <!-- =====================================================
                      PAGE CONTENT
                 ====================================================== -->
 
                 <section
+                    id="ksp-content"
                     class="
-                        mx-page-content
                         p-8
                         flex-1
                     "
@@ -1575,13 +1568,14 @@
 
     @endauth
 
+    @include('partials.cookie-consent')
+
 
 
     <!-- ================================================================
          JAVASCRIPT
     ================================================================= -->
 
-    <script src="{{ asset('js/responsive.js') }}"></script>
 
     <script>
 

@@ -1,178 +1,118 @@
-document.addEventListener('DOMContentLoaded', function () {
+/* ==========================================================================
+   KSP - RESPONSIVE SIDEBAR
+   --------------------------------------------------------------------------
+   Desktop (>= 1024px)  : tombol hamburger menutup/membuka sidebar.
+                          Kondisi disimpan di cookie ksp_sidebar_state
+                          (hanya jika pengguna sudah menekan "Terima").
+   Tablet/Mobile        : sidebar menjadi drawer (off-canvas) + overlay.
+                          Selalu tertutup saat halaman dimuat, tidak disimpan.
 
-    const sidebar = document.getElementById('app-sidebar');
-    const toggle = document.getElementById('sidebar-toggle');
-    const overlay = document.getElementById('sidebar-overlay');
+   Class awal pada <html> (ksp-sidebar-collapsed) dipasang oleh Blade
+   di sisi server, sehingga tidak ada kedipan saat pindah halaman.
+   ========================================================================== */
+(function (window, document) {
+    'use strict';
 
+    var COOKIE_NAME = 'ksp_sidebar_state';
+    var CLASS_COLLAPSED = 'ksp-sidebar-collapsed'; // desktop
+    var CLASS_OPEN = 'ksp-sidebar-open';           // mobile/tablet
+    var CLASS_NO_SCROLL = 'ksp-no-scroll';
 
-    /*
-    |--------------------------------------------------------------------------
-    | Check element
-    |--------------------------------------------------------------------------
-    */
+    var root = document.documentElement;
+    var desktop = window.matchMedia('(min-width: 1024px)');
 
-    if (!sidebar || !toggle || !overlay) {
-        return;
-    }
+    function init() {
+        var sidebar = document.getElementById('ksp-sidebar');
+        var toggle = document.getElementById('ksp-sidebar-toggle');
+        var overlay = document.getElementById('ksp-sidebar-overlay');
 
+        if (!sidebar || !toggle) {
+            return;
+        }
 
-    /*
-    |--------------------------------------------------------------------------
-    | Open sidebar
-    |--------------------------------------------------------------------------
-    */
+        function isCollapsed() {
+            return root.classList.contains(CLASS_COLLAPSED);
+        }
 
-    function openSidebar() {
+        function isDrawerOpen() {
+            return root.classList.contains(CLASS_OPEN);
+        }
 
-        sidebar.classList.add('is-open');
+        function syncAria() {
+            var expanded = desktop.matches ? !isCollapsed() : isDrawerOpen();
+            toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+        }
 
-        overlay.classList.add('is-visible');
+        function savePreference() {
+            if (window.KspCookies) {
+                window.KspCookies.setPreference(
+                    COOKIE_NAME,
+                    isCollapsed() ? 'collapsed' : 'open'
+                );
+            }
+        }
 
-        document.body.classList.add('sidebar-open');
+        function openDrawer() {
+            root.classList.add(CLASS_OPEN, CLASS_NO_SCROLL);
+            syncAria();
+        }
 
-        toggle.setAttribute(
-            'aria-expanded',
-            'true'
-        );
+        function closeDrawer() {
+            root.classList.remove(CLASS_OPEN, CLASS_NO_SCROLL);
+            syncAria();
+        }
 
-        toggle.setAttribute(
-            'aria-label',
-            'Tutup menu navigasi'
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Close sidebar
-    |--------------------------------------------------------------------------
-    */
-
-    function closeSidebar() {
-
-        sidebar.classList.remove('is-open');
-
-        overlay.classList.remove('is-visible');
-
-        document.body.classList.remove('sidebar-open');
-
-        toggle.setAttribute(
-            'aria-expanded',
-            'false'
-        );
-
-        toggle.setAttribute(
-            'aria-label',
-            'Buka menu navigasi'
-        );
-    }
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Hamburger
-    |--------------------------------------------------------------------------
-    */
-
-    toggle.addEventListener(
-        'click',
-        function (event) {
-
-            event.stopPropagation();
-
-            if (sidebar.classList.contains('is-open')) {
-
-                closeSidebar();
-
+        toggle.addEventListener('click', function () {
+            if (desktop.matches) {
+                root.classList.toggle(CLASS_COLLAPSED);
+                savePreference();
+            } else if (isDrawerOpen()) {
+                closeDrawer();
             } else {
-
-                openSidebar();
-
+                openDrawer();
             }
 
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Overlay
-    |--------------------------------------------------------------------------
-    */
-
-    overlay.addEventListener(
-        'click',
-        function () {
-
-            closeSidebar();
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | ESC
-    |--------------------------------------------------------------------------
-    */
-
-    document.addEventListener(
-        'keydown',
-        function (event) {
-
-            if (event.key === 'Escape') {
-
-                closeSidebar();
-
-            }
-
-        }
-    );
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | Close sidebar setelah klik menu
-    |--------------------------------------------------------------------------
-    */
-
-    sidebar
-        .querySelectorAll('a')
-        .forEach(function (link) {
-
-            link.addEventListener(
-                'click',
-                function () {
-
-                    if (window.innerWidth <= 1023) {
-
-                        closeSidebar();
-
-                    }
-
-                }
-            );
-
+            syncAria();
         });
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | Close ketika kembali ke desktop
-    |--------------------------------------------------------------------------
-    */
-
-    window.addEventListener(
-        'resize',
-        function () {
-
-            if (window.innerWidth > 1023) {
-
-                closeSidebar();
-
-            }
-
+        if (overlay) {
+            overlay.addEventListener('click', closeDrawer);
         }
-    );
 
-});
+        document.addEventListener('keydown', function (event) {
+            if (event.key === 'Escape' && isDrawerOpen()) {
+                closeDrawer();
+                toggle.focus();
+            }
+        });
+
+        // Pindah ke ukuran desktop saat drawer terbuka -> tutup drawer.
+        var onBreakpointChange = function () {
+            if (desktop.matches) {
+                closeDrawer();
+            }
+            syncAria();
+        };
+
+        if (desktop.addEventListener) {
+            desktop.addEventListener('change', onBreakpointChange);
+        } else if (desktop.addListener) {
+            desktop.addListener(onBreakpointChange); // Safari lama
+        }
+
+        // Jika pengguna baru menekan "Terima", simpan kondisi sidebar saat ini.
+        document.addEventListener('ksp:cookie-consent', function (event) {
+            if (event.detail && event.detail.status === 'accepted') {
+                savePreference();
+            }
+        });
+
+        syncAria();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+})(window, document);
