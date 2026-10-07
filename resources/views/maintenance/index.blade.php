@@ -196,7 +196,7 @@
                 <select name="equipment_id" required class="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 text-sm">
                     <option value="">Pilih equipment</option>
                     @foreach($equipment as $e)
-                        <option value="{{ $e->id }}">{{ $e->equipment_code }} — {{ $e->name }}</option>
+                        <option value="{{ $e->id }}" @selected(old('equipment_id', $prefillEquipmentId ?? null) == $e->id)>{{ $e->equipment_code }} — {{ $e->name }}</option>
                     @endforeach
                 </select>
             </div>
@@ -246,4 +246,13 @@
         </form>
     </div>
 </div>
+
+@if(($openModal ?? false) || $errors->any())
+    <script>
+        (function () {
+            var m = document.getElementById('requestModal');
+            if (m) { m.classList.remove('hidden'); m.classList.add('flex'); }
+        })();
+    </script>
+@endif
 @endsection

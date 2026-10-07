@@ -822,7 +822,7 @@
                                         </a>
 
 
-                                        @if(in_array($workOrder->status, ['OPEN', 'ASSIGNED']))
+                                        @if(in_array($workOrder->status, ['OPEN', 'ASSIGNED']) && $workOrder->maintenance_request_id)
                                         @can('update', $workOrder)
                                         <a href="{{ route('work-orders.edit', $workOrder) }}"
                                            title="Edit"

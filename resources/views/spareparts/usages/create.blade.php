@@ -161,6 +161,47 @@
             </div>
 
 
+            {{-- Work Order --}}
+            <div>
+
+                <label
+                    for="work_order_id"
+                    class="block text-sm font-semibold text-slate-700 mb-2"
+                >
+                    Work Order
+                </label>
+
+                <select
+                    id="work_order_id"
+                    name="work_order_id"
+                    class="w-full rounded-xl border-slate-300
+                           focus:border-blue-500 focus:ring-blue-500"
+                >
+                    <option value="">
+                        -- Tidak terkait Work Order --
+                    </option>
+
+                    @foreach($workOrders as $wo)
+                        <option
+                            value="{{ $wo->id }}"
+                            @selected(old('work_order_id', $selectedWorkOrderId) == $wo->id)
+                        >
+                            {{ $wo->wo_number }} — {{ $wo->equipment->name ?? '-' }}
+                        </option>
+                    @endforeach
+                </select>
+
+                @error('work_order_id')
+                    <p class="text-xs text-rose-600 mt-1">{{ $message }}</p>
+                @enderror
+
+                <p class="text-xs text-slate-400 mt-1">
+                    Hanya Work Order yang sedang dikerjakan. Pilih Work Order <em>atau</em> Ticket, tidak keduanya.
+                </p>
+
+            </div>
+
+
             {{-- Quantity --}}
             <div>
 

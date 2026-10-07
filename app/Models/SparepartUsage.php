@@ -11,6 +11,7 @@ class SparepartUsage extends Model
         'sparepart_id',
         'user_id',
         'maintenance_ticket_id',
+        'work_order_id',
         'quantity',
         'notes',
         'used_at',
@@ -42,5 +43,10 @@ class SparepartUsage extends Model
             MaintenanceTicket::class,
             'maintenance_ticket_id'
         );
+    }
+
+    public function workOrder(): BelongsTo
+    {
+        return $this->belongsTo(WorkOrder::class, 'work_order_id');
     }
 }

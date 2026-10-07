@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
@@ -37,5 +38,26 @@ class Equipment extends Model
             WorkOrder::class,
             'equipment_id'
         );
+    }
+
+    public function preventiveMaintenances(): HasMany
+    {
+        return $this->hasMany(PreventiveMaintenance::class, 'equipment_id');
+    }
+
+    /** Downtime yang sedang berjalan (maksimal satu per equipment). */
+    public function ongoingDowntime(): HasOne
+    {
+        return $this->hasOne(EquipmentDowntime::class, 'equipment_id')
+            ->where('status', 'ONGOING')
+            ->latestOfMany();
+    }
+
+    /** Work Order yang sedang dikerjakan / ditunda. */
+    public function currentWorkOrder(): HasOne
+    {
+        return $this->hasOne(WorkOrder::class, 'equipment_id')
+            ->whereIn('status', ['IN_PROGRESS', 'ON_HOLD'])
+            ->latestOfMany();
     }
 }

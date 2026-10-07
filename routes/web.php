@@ -292,10 +292,15 @@ Route::middleware('auth')->group(function () {
                 */
                 Route::prefix('preventive')
                     ->name('preventive.')
+                    ->where(['preventive' => '[0-9]+'])
                     ->group(function () {
                         Route::get('/', [PreventiveMaintenanceController::class, 'index'])->name('index');
                         Route::post('/', [PreventiveMaintenanceController::class, 'store'])->name('store');
-                        Route::patch('/{id}/complete', [PreventiveMaintenanceController::class, 'complete'])->name('complete');
+                        Route::get('/{preventive}', [PreventiveMaintenanceController::class, 'show'])->name('show');
+                        Route::get('/{preventive}/edit', [PreventiveMaintenanceController::class, 'edit'])->name('edit');
+                        Route::put('/{preventive}', [PreventiveMaintenanceController::class, 'update'])->name('update');
+                        Route::patch('/{preventive}/complete', [PreventiveMaintenanceController::class, 'complete'])->name('complete');
+                        Route::post('/{preventive}/work-order', [PreventiveMaintenanceController::class, 'generateWorkOrder'])->name('work-order');
                     });
 
                 Route::where(['maintenanceRequest' => '[0-9]+'])->group(function () {
@@ -434,6 +439,23 @@ Route::middleware('auth')->group(function () {
             '/equipment',
             [EquipmentController::class, 'store']
         )->name('equipment.store');
+
+
+        /*
+        |--------------------------------------------------------------------------
+        | Edit / Update Equipment
+        |--------------------------------------------------------------------------
+        */
+
+        Route::get(
+            '/equipment/{equipment}/edit',
+            [EquipmentController::class, 'edit']
+        )->name('equipment.edit');
+
+        Route::put(
+            '/equipment/{equipment}',
+            [EquipmentController::class, 'update']
+        )->name('equipment.update');
 
 
         /*

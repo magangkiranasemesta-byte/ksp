@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\ApprovalHistory;
 use App\Models\Equipment;
+use App\Models\EquipmentDowntime;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
 use App\Services\NotificationService;
@@ -77,7 +78,11 @@ class MaintenanceRequestController extends Controller
             ->orderBy('username')
             ->get();
 
-        return view('maintenance.index', compact('requests', 'equipment', 'engineers'));
+        // Prefill dari halaman Equipment / Downtime: ?equipment_id=..&open=1
+        $prefillEquipmentId = $request->integer('equipment_id') ?: null;
+
+        return view('maintenance.index', compact('requests', 'equipment', 'engineers', 'prefillEquipmentId'))
+            ->with('openModal', $request->boolean('open'));
     }
 
     public function store(Request $request): RedirectResponse
@@ -114,13 +119,24 @@ class MaintenanceRequestController extends Controller
             $engineerId = $user->id;
         }
 
-        $maintenanceRequest = MaintenanceRequest::create([
-            'equipment_id' => $equipment->id,
-            'engineer_id'  => $engineerId,
-            'priority'     => $data['priority'],
-            'description'  => $data['description'],
-            'status'       => 'PENDING_SUPERVISOR',
-        ]);
+        $maintenanceRequest = DB::transaction(function () use ($equipment, $engineerId, $data) {
+            $mr = MaintenanceRequest::create([
+                'equipment_id' => $equipment->id,
+                'engineer_id'  => $engineerId,
+                'priority'     => $data['priority'],
+                'description'  => $data['description'],
+                'status'       => 'PENDING_SUPERVISOR',
+            ]);
+
+            // Downtime yang sedang berjalan pada equipment ini (dan belum punya
+            // request) otomatis dikaitkan, sehingga selesai bersama Work Order.
+            EquipmentDowntime::where('equipment_id', $equipment->id)
+                ->where('status', 'ONGOING')
+                ->whereNull('maintenance_request_id')
+                ->update(['maintenance_request_id' => $mr->id]);
+
+            return $mr;
+        });
 
         NotificationService::roles(
             ['SUPERVISOR'],

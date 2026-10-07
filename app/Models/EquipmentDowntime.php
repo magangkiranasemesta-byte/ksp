@@ -4,13 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Spatie\Activitylog\LogOptions;
+use Spatie\Activitylog\Traits\LogsActivity;
 
 class EquipmentDowntime extends Model
 {
-    use HasFactory;
+    use HasFactory, LogsActivity;
 
     protected $fillable = [
         'equipment_id',
+        'maintenance_request_id',
         'started_at',
         'ended_at',
         'reason',
@@ -23,6 +26,20 @@ class EquipmentDowntime extends Model
         'started_at' => 'datetime',
         'ended_at' => 'datetime',
     ];
+
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logAll()
+            ->logOnlyDirty()
+            ->useLogName('downtime')
+            ->setDescriptionForEvent(fn (string $eventName) => "Downtime equipment telah di-{$eventName}");
+    }
+
+    public function maintenanceRequest()
+    {
+        return $this->belongsTo(MaintenanceRequest::class, 'maintenance_request_id');
+    }
 
     public function equipment()
     {

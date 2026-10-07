@@ -136,6 +136,14 @@
                                     Detail
                                 </a>
 
+                                {{-- Edit --}}
+                                <a
+                                    href="{{ route('equipment.edit', $e) }}"
+                                    class="px-3 py-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold rounded-lg transition"
+                                >
+                                    Edit
+                                </a>
+
                                 {{-- QR Code --}}
                                 <a
                                     href="{{ route('equipment.qr', $e) }}"

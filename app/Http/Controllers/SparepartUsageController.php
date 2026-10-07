@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Sparepart;
 use App\Models\SparepartUsage;
+use App\Models\WorkOrder;
+use Illuminate\Support\Facades\Gate;
 use App\Models\MaintenanceTicket;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,6 +20,7 @@ class SparepartUsageController extends Controller
         $query = SparepartUsage::with([
             'sparepart',
             'user',
+            'workOrder',
         ])->latest('used_at');
 
         /*
@@ -72,9 +75,11 @@ class SparepartUsageController extends Controller
                     })
 
                     ->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery
-                            ->where('name', 'like', "%{$search}%")
-                            ->orWhere('username', 'like', "%{$search}%");
+                        $userQuery->where('username', 'like', "%{$search}%");
+                    })
+
+                    ->orWhereHas('workOrder', function ($woQuery) use ($search) {
+                        $woQuery->where('wo_number', 'like', "%{$search}%");
                     });
             });
         }
@@ -113,11 +118,23 @@ class SparepartUsageController extends Controller
 
         $tickets = MaintenanceTicket::latest()->get();
 
+        // Work Order yang sedang dikerjakan dan boleh dicatat pemakaian sparepart-nya oleh user ini.
+        $workOrders = WorkOrder::with('equipment')
+            ->whereIn('status', ['IN_PROGRESS', 'ON_HOLD'])
+            ->latest()
+            ->get()
+            ->filter(fn ($wo) => Gate::allows('recordSparepart', $wo))
+            ->values();
+
+        $selectedWorkOrderId = request()->integer('work_order_id') ?: null;
+
         return view(
             'spareparts.usages.create',
             compact(
                 'spareparts',
-                'tickets'
+                'tickets',
+                'workOrders',
+                'selectedWorkOrderId'
             )
         );
     }
@@ -142,6 +159,13 @@ class SparepartUsageController extends Controller
             'maintenance_ticket_id' => [
                 'nullable',
                 'integer',
+                'prohibits:work_order_id',
+            ],
+
+            'work_order_id' => [
+                'nullable',
+                'integer',
+                'exists:work_orders,id',
             ],
 
             'quantity' => [
@@ -166,6 +190,9 @@ class SparepartUsageController extends Controller
 
             'sparepart_id.exists' =>
                 'Sparepart yang dipilih tidak ditemukan.',
+
+            'maintenance_ticket_id.prohibits' =>
+                'Pilih salah satu: Ticket atau Work Order.',
 
             'quantity.required' =>
                 'Jumlah pemakaian wajib diisi.',
@@ -264,6 +291,43 @@ class SparepartUsageController extends Controller
 
             /*
             |--------------------------------------------------------------------------
+            | Validasi Work Order
+            |--------------------------------------------------------------------------
+            |
+            | Sparepart hanya boleh dipakai pada WO yang sedang dikerjakan
+            | (IN_PROGRESS / ON_HOLD) dan oleh pihak yang berwenang.
+            |
+            */
+
+            $workOrderId = $validated['work_order_id'] ?? null;
+
+            if ($workOrderId !== null) {
+
+                $workOrder = WorkOrder::lockForUpdate()->find($workOrderId);
+
+                if (
+                    ! $workOrder
+                    || ! in_array($workOrder->status, ['IN_PROGRESS', 'ON_HOLD'], true)
+                ) {
+                    DB::rollBack();
+
+                    return back()
+                        ->withInput()
+                        ->withErrors([
+                            'work_order_id' =>
+                                'Sparepart hanya dapat dicatat pada Work Order yang sedang dikerjakan.',
+                        ]);
+                }
+
+                if (! Gate::allows('recordSparepart', $workOrder)) {
+                    DB::rollBack();
+
+                    abort(403);
+                }
+            }
+
+            /*
+            |--------------------------------------------------------------------------
             | Kurangi Stok
             |--------------------------------------------------------------------------
             */
@@ -278,7 +342,10 @@ class SparepartUsageController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            SparepartUsage::create([
+            $usage = SparepartUsage::create([
+                'work_order_id' =>
+                    $workOrderId,
+
                 'sparepart_id' =>
                     $sparepart->id,
 
@@ -298,6 +365,18 @@ class SparepartUsageController extends Controller
                     $validated['used_at'] ?? now(),
             ]);
 
+            activity('sparepart')
+                ->performedOn($sparepart)
+                ->causedBy(auth()->user())
+                ->event('use')
+                ->withProperties([
+                    'quantity'      => $quantity,
+                    'stock_after'   => $sparepart->stock,
+                    'work_order_id' => $workOrderId,
+                    'ticket_id'     => $ticketId,
+                ])
+                ->log("Pemakaian {$quantity} {$sparepart->unit} {$sparepart->name}");
+
             /*
             |--------------------------------------------------------------------------
             | Commit
@@ -306,12 +385,27 @@ class SparepartUsageController extends Controller
 
             DB::commit();
 
+            if ($workOrderId !== null) {
+                return redirect()
+                    ->route('work-orders.show', $workOrderId)
+                    ->with(
+                        'success',
+                        "Pemakaian {$quantity} {$sparepart->unit} {$sparepart->name} dicatat. Stok tersisa: {$sparepart->stock} {$sparepart->unit}."
+                    );
+            }
+
             return redirect()
                 ->route('sparepart-usages.index')
                 ->with(
                     'success',
                     "Pemakaian {$quantity} {$sparepart->unit} {$sparepart->name} berhasil dicatat. Stok tersisa: {$sparepart->stock} {$sparepart->unit}."
                 );
+
+        } catch (\Illuminate\Auth\Access\AuthorizationException | \Symfony\Component\HttpKernel\Exception\HttpException $e) {
+
+            DB::rollBack();
+
+            throw $e;
 
         } catch (\Throwable $e) {
 

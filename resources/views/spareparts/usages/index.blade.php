@@ -219,7 +219,7 @@
                         </th>
 
                         <th class="px-5 py-4 text-left font-semibold text-slate-600">
-                            Ticket
+                            Ticket / WO
                         </th>
 
                         <th class="px-5 py-4 text-center font-semibold text-slate-600">
@@ -311,6 +311,13 @@
                                         Ticket #{{ $usage->maintenance_ticket_id }}
 
                                     </span>
+
+                                @elseif($usage->work_order_id && $usage->workOrder)
+
+                                    <a href="{{ route('work-orders.show', $usage->workOrder) }}"
+                                       class="inline-flex items-center px-2.5 py-1 rounded-lg bg-indigo-50 text-indigo-700 text-xs font-semibold hover:bg-indigo-100">
+                                        {{ $usage->workOrder->wo_number }}
+                                    </a>
 
                                 @else
 

@@ -94,4 +94,13 @@ class WorkOrderPolicy
     {
         return $this->isExecutor($user, $workOrder);
     }
+
+    /**
+     * Mencatat pemakaian sparepart pada WO:
+     * technician yang ditugaskan, atau perencana.
+     */
+    public function recordSparepart(User $user, WorkOrder $workOrder): bool
+    {
+        return $this->isExecutor($user, $workOrder) || $this->isPlanner($user);
+    }
 }

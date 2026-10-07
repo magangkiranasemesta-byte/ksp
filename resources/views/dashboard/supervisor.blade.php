@@ -1,27 +1,29 @@
 @extends('layouts.app')
 
-@section('title', 'Supervisor Control')
-@section('page_title', 'Pengawasan Tim & Assignment')
+@section('title', 'Dashboard Supervisor - Maintenance X')
+@section('page_title', 'Dashboard Supervisor')
 
 @section('content')
 <div class="space-y-6">
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Total Tiket Masuk</span>
-            <div class="text-3xl font-extrabold text-slate-900 mt-2">{{ $totalTickets }}</div>
-        </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-            <span class="text-xs font-bold text-amber-500 uppercase tracking-wider block">Belum Dilengkapi Teknisi</span>
-            <div class="text-3xl font-extrabold text-amber-600 mt-2">{{ $pendingTickets }}</div>
-        </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-            <span class="text-xs font-bold text-blue-500 uppercase tracking-wider block">Dalam Pengerjaan</span>
-            <div class="text-3xl font-extrabold text-blue-600 mt-2">{{ $inProgressTickets }}</div>
-        </div>
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-            <span class="text-xs font-bold text-emerald-500 uppercase tracking-wider block">Selesai Ditinjau</span>
-            <div class="text-3xl font-extrabold text-emerald-600 mt-2">{{ $completedTickets }}</div>
-        </div>
+    @include('dashboard.widgets.header')
+    @include('dashboard.widgets.kpi')
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="min-w-0">@include('dashboard.widgets.approval-queue')</div>
+        <div class="min-w-0">@include('dashboard.widgets.workload')</div>
     </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <div class="xl:col-span-2 min-w-0">@include('dashboard.widgets.active-wo')</div>
+        <div class="min-w-0">@include('dashboard.widgets.wo-chart')</div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <div class="min-w-0">@include('dashboard.widgets.pm-due')</div>
+        <div class="min-w-0">@include('dashboard.widgets.downtime')</div>
+    </div>
+
+    @include('dashboard.widgets.activity')
+    @include('dashboard.widgets.empty')
 </div>
 @endsection

@@ -102,7 +102,7 @@
         {{-- Actions --}}
         <div class="flex items-center gap-2">
 
-            @if(in_array($workOrder->status, ['OPEN', 'ASSIGNED']))
+            @if(in_array($workOrder->status, ['OPEN', 'ASSIGNED']) && $workOrder->maintenance_request_id)
             @can('update', $workOrder)
             <a href="{{ route('work-orders.edit', $workOrder) }}"
                class="inline-flex items-center gap-2
@@ -928,6 +928,62 @@
 
                 </div>
 
+            </div>
+
+
+            {{-- Sumber: Preventive Maintenance --}}
+            @if($workOrder->preventiveMaintenance)
+                <div class="bg-blue-50 border border-blue-100 rounded-2xl px-5 py-4 text-sm text-blue-800">
+                    Work Order ini dibuat dari jadwal
+                    <a href="{{ route('maintenance.preventive.show', $workOrder->preventiveMaintenance) }}" class="font-semibold underline">
+                        {{ $workOrder->preventiveMaintenance->title }}
+                    </a>
+                    (Preventive Maintenance). Jadwal berikutnya digeser otomatis saat WO selesai.
+                </div>
+            @endif
+
+            {{-- Sparepart Digunakan --}}
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm">
+
+                <div class="px-5 py-4 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3">
+                    <h2 class="text-lg font-semibold text-slate-800">Sparepart Digunakan</h2>
+
+                    @if(in_array($workOrder->status, ['IN_PROGRESS', 'ON_HOLD']) && auth()->user()->can('recordSparepart', $workOrder) && auth()->user()->hasPermission('spareparts'))
+                        <a href="{{ route('sparepart-usages.create', ['work_order_id' => $workOrder->id]) }}"
+                           class="inline-flex items-center min-h-[40px] px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold rounded-xl transition">
+                            Catat Pemakaian
+                        </a>
+                    @endif
+                </div>
+
+                <div class="p-5">
+                    @if($workOrder->sparepartUsages->isEmpty())
+                        <p class="text-sm text-slate-400 text-center py-4">Belum ada sparepart yang dipakai pada Work Order ini.</p>
+                    @else
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-xs text-slate-400 border-b border-slate-100">
+                                        <th class="py-2 pr-4 font-medium">Sparepart</th>
+                                        <th class="py-2 pr-4 font-medium">Qty</th>
+                                        <th class="py-2 pr-4 font-medium">Oleh</th>
+                                        <th class="py-2 font-medium">Waktu</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-50">
+                                    @foreach($workOrder->sparepartUsages as $usage)
+                                        <tr>
+                                            <td class="py-2 pr-4 font-medium text-slate-700">{{ $usage->sparepart->name ?? '-' }}</td>
+                                            <td class="py-2 pr-4 text-slate-600 whitespace-nowrap">{{ $usage->quantity }} {{ $usage->sparepart->unit ?? '' }}</td>
+                                            <td class="py-2 pr-4 text-slate-600">{{ $usage->user->username ?? '-' }}</td>
+                                            <td class="py-2 text-slate-500 whitespace-nowrap">{{ optional($usage->used_at)->format('d/m/Y H:i') }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @endif
+                </div>
             </div>
 
 

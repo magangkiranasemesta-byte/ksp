@@ -348,6 +348,57 @@
             </div>
 
 
+            {{-- MAINTENANCE LINK --}}
+            <div class="detail-section">
+
+                <h3>Penanganan Maintenance</h3>
+
+                <div class="detail-grid">
+
+                    <div class="detail-item">
+                        <span class="detail-label">Maintenance Request</span>
+                        <strong class="detail-value">
+                            @if ($downtime->maintenanceRequest)
+                                <a href="{{ route('maintenance.show', $downtime->maintenanceRequest) }}">
+                                    Request #{{ $downtime->maintenanceRequest->id }}
+                                    ({{ str_replace('_', ' ', $downtime->maintenanceRequest->status) }})
+                                </a>
+                            @elseif ($downtime->status === 'ONGOING')
+                                Belum ada.
+                                <a href="{{ route('maintenance.index', ['equipment_id' => $downtime->equipment_id, 'open' => 1]) }}">
+                                    Ajukan Maintenance Request
+                                </a>
+                            @else
+                                -
+                            @endif
+                        </strong>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Work Order</span>
+                        <strong class="detail-value">
+                            @if ($downtime->maintenanceRequest && $downtime->maintenanceRequest->workOrder)
+                                <a href="{{ route('work-orders.show', $downtime->maintenanceRequest->workOrder) }}">
+                                    {{ $downtime->maintenanceRequest->workOrder->wo_number }}
+                                    ({{ str_replace('_', ' ', $downtime->maintenanceRequest->workOrder->status) }})
+                                </a>
+                            @else
+                                -
+                            @endif
+                        </strong>
+                    </div>
+
+                </div>
+
+                @if ($downtime->status === 'ONGOING' && $downtime->maintenanceRequest)
+                    <p class="detail-label" style="margin-top: 10px;">
+                        Downtime akan selesai otomatis ketika Work Order berstatus COMPLETED.
+                    </p>
+                @endif
+
+            </div>
+
+
             {{-- ACTION --}}
             <div class="detail-actions">
 

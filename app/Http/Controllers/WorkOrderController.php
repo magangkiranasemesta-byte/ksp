@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Equipment;
 use App\Models\MaintenanceRequest;
 use App\Models\User;
+use App\Models\EquipmentDowntime;
 use App\Models\WorkOrder;
 use App\Services\NotificationService;
+use App\Services\PreventiveMaintenanceService;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -151,7 +153,7 @@ class WorkOrderController extends Controller
             }
 
             $workOrder = WorkOrder::create([
-                'wo_number'              => $this->generateWoNumber(),
+                'wo_number'              => WorkOrder::generateNumber(),
                 'maintenance_request_id' => $mr->id,
                 'equipment_id'           => $mr->equipment_id, // selalu mengikuti request
                 'technician_id'          => $technician?->id,
@@ -194,7 +196,13 @@ class WorkOrderController extends Controller
     {
         Gate::authorize('view', $workOrder);
 
-        $workOrder->load(['equipment', 'technician', 'maintenanceRequest']);
+        $workOrder->load([
+            'equipment',
+            'technician',
+            'maintenanceRequest',
+            'preventiveMaintenance',
+            'sparepartUsages' => fn ($q) => $q->with(['sparepart', 'user'])->latest('used_at'),
+        ]);
 
         $technicians = Gate::allows('assign', $workOrder) ? $this->technicians() : collect();
 
@@ -208,7 +216,7 @@ class WorkOrderController extends Controller
         if (! $this->isEditable($workOrder)) {
             return redirect()
                 ->route('work-orders.show', $workOrder)
-                ->with('warning', 'Work Order hanya dapat diedit ketika status OPEN atau ASSIGNED.');
+                ->with('warning', 'Work Order hanya dapat diedit ketika status OPEN/ASSIGNED dan berasal dari Maintenance Request.');
         }
 
         $workOrder->load(['equipment', 'technician', 'maintenanceRequest']);
@@ -244,7 +252,7 @@ class WorkOrderController extends Controller
         if (! $this->isEditable($workOrder)) {
             return redirect()
                 ->route('work-orders.show', $workOrder)
-                ->with('warning', 'Work Order hanya dapat diedit ketika status OPEN atau ASSIGNED.');
+                ->with('warning', 'Work Order hanya dapat diedit ketika status OPEN/ASSIGNED dan berasal dari Maintenance Request.');
         }
 
         $validated = $request->validate(array_merge(
@@ -438,6 +446,7 @@ class WorkOrderController extends Controller
             return back()->with('warning', $error);
         }
 
+        $this->afterCompleted($workOrder);
         $this->notifyCompleted($workOrder);
 
         return back()->with('success', "Work Order {$workOrder->wo_number} berhasil diselesaikan.");
@@ -460,6 +469,10 @@ class WorkOrderController extends Controller
 
         if ($error) {
             return back()->with('warning', $error);
+        }
+
+        if ($workOrder->preventive_maintenance_id && $workOrder->preventiveMaintenance) {
+            app(PreventiveMaintenanceService::class)->releaseAfterCancel($workOrder->preventiveMaintenance);
         }
 
         return back()->with('success', "Work Order {$workOrder->wo_number} berhasil dibatalkan.");
@@ -574,7 +587,10 @@ class WorkOrderController extends Controller
 
     private function isEditable(WorkOrder $workOrder): bool
     {
-        return in_array($workOrder->status, ['OPEN', 'ASSIGNED'], true);
+        // WO hasil generate Preventive Maintenance tidak punya Maintenance Request,
+        // sehingga hanya diatur lewat assign / cancel.
+        return in_array($workOrder->status, ['OPEN', 'ASSIGNED'], true)
+            && $workOrder->maintenance_request_id !== null;
     }
 
     private function fieldRules(): array
@@ -590,6 +606,46 @@ class WorkOrderController extends Controller
             'planned_end'         => ['nullable', 'date', 'after_or_equal:planned_start'],
             'completion_notes'    => ['nullable', 'string'],
         ];
+    }
+
+    /**
+     * Efek samping penyelesaian WO:
+     *  1. Downtime yang terhubung ke Maintenance Request ikut diselesaikan.
+     *  2. Jadwal Preventive Maintenance yang terhubung dicatat selesai & digeser.
+     */
+    private function afterCompleted(WorkOrder $workOrder): void
+    {
+        DB::transaction(function () use ($workOrder) {
+            if ($workOrder->maintenance_request_id) {
+                $downtimes = EquipmentDowntime::lockForUpdate()
+                    ->where('maintenance_request_id', $workOrder->maintenance_request_id)
+                    ->where('status', 'ONGOING')
+                    ->get();
+
+                foreach ($downtimes as $downtime) {
+                    $downtime->forceFill([
+                        'status'   => 'COMPLETED',
+                        'ended_at' => $workOrder->actual_end ?? now(),
+                    ])->saveQuietly();
+
+                    activity('downtime')
+                        ->performedOn($downtime)
+                        ->causedBy(auth()->user())
+                        ->event('complete')
+                        ->withProperties(['work_order' => $workOrder->wo_number])
+                        ->log("Downtime #{$downtime->id} selesai otomatis karena {$workOrder->wo_number} selesai");
+                }
+            }
+
+            if ($workOrder->preventive_maintenance_id && $workOrder->preventiveMaintenance) {
+                app(PreventiveMaintenanceService::class)->complete(
+                    $workOrder->preventiveMaintenance,
+                    auth()->user(),
+                    $workOrder,
+                    $workOrder->completion_notes
+                );
+            }
+        });
     }
 
     private function notifyAssigned(WorkOrder $workOrder, User $technician): void
@@ -626,23 +682,5 @@ class WorkOrderController extends Controller
                 $url
             );
         }
-    }
-
-    /**
-     * Format: WO-YYYYMMDD-0001. Dipanggil di dalam transaksi.
-     * Kolom wo_number UNIQUE menjadi pengaman terakhir.
-     */
-    private function generateWoNumber(): string
-    {
-        $prefix = 'WO-' . now()->format('Ymd') . '-';
-
-        $last = WorkOrder::where('wo_number', 'like', $prefix . '%')
-            ->orderByDesc('wo_number')
-            ->lockForUpdate()
-            ->first();
-
-        $sequence = $last ? ((int) substr($last->wo_number, -4)) + 1 : 1;
-
-        return $prefix . str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
     }
 }

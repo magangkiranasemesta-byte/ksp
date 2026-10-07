@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Equipment;
 use App\Models\EquipmentDowntime;
 use Illuminate\Http\Request;
+use App\Services\NotificationService;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class EquipmentDowntimeController extends Controller
 {
@@ -99,7 +101,7 @@ class EquipmentDowntimeController extends Controller
                 ]);
         }
 
-        EquipmentDowntime::create([
+        $downtime = EquipmentDowntime::create([
             'equipment_id' => $validated['equipment_id'],
             'started_at' => $validated['started_at'],
             'reason' => $validated['reason'],
@@ -108,11 +110,21 @@ class EquipmentDowntimeController extends Controller
             'created_by' => Auth::id(),
         ]);
 
+        $equipment = Equipment::find($validated['equipment_id']);
+
+        NotificationService::roles(
+            ['SUPERVISOR', 'MANAGER', 'ADMIN'],
+            'Equipment downtime',
+            ($equipment->name ?? 'Equipment') . ' mengalami downtime: ' . $validated['reason'],
+            'warning',
+            route('downtime.show', $downtime)
+        );
+
         return redirect()
             ->route('downtime.index')
             ->with(
                 'success',
-                'Downtime equipment berhasil dibuat.'
+                'Downtime equipment berhasil dibuat. Ajukan Maintenance Request agar perbaikan dapat dijadwalkan.'
             );
     }
 
@@ -124,6 +136,7 @@ class EquipmentDowntimeController extends Controller
         $downtime->load([
             'equipment',
             'creator',
+            'maintenanceRequest.workOrder',
         ]);
 
         return view('downtime.show', [
@@ -221,26 +234,38 @@ class EquipmentDowntimeController extends Controller
     }
 
     /**
-     * Menyelesaikan downtime.
+     * Menyelesaikan downtime secara manual.
+     * (Downtime yang terhubung ke Maintenance Request juga selesai
+     * otomatis ketika Work Order-nya COMPLETED.)
      */
     public function complete(EquipmentDowntime $downtime)
     {
-        if ($downtime->status === 'COMPLETED') {
-            return back()->with(
-                'error',
-                'Downtime ini sudah selesai.'
-            );
+        $done = DB::transaction(function () use ($downtime) {
+            $fresh = EquipmentDowntime::lockForUpdate()->findOrFail($downtime->id);
+
+            if ($fresh->status === 'COMPLETED') {
+                return false;
+            }
+
+            $fresh->forceFill([
+                'ended_at' => now(),
+                'status'   => 'COMPLETED',
+            ])->saveQuietly();
+
+            activity('downtime')
+                ->performedOn($fresh)
+                ->causedBy(Auth::user())
+                ->event('complete')
+                ->log("Downtime #{$fresh->id} diselesaikan");
+
+            return true;
+        });
+
+        if (! $done) {
+            return back()->with('error', 'Downtime ini sudah selesai.');
         }
 
-        $downtime->update([
-            'ended_at' => now(),
-            'status' => 'COMPLETED',
-        ]);
-
-        return back()->with(
-            'success',
-            'Downtime berhasil diselesaikan.'
-        );
+        return back()->with('success', 'Downtime berhasil diselesaikan.');
     }
 
     /**
@@ -248,6 +273,13 @@ class EquipmentDowntimeController extends Controller
      */
     public function destroy(EquipmentDowntime $downtime)
     {
+        if ($downtime->maintenance_request_id) {
+            return back()->with(
+                'error',
+                'Downtime terhubung ke Maintenance Request dan tidak dapat dihapus.'
+            );
+        }
+
         $downtime->delete();
 
         return redirect()

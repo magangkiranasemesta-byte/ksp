@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\Activitylog\Traits\LogsActivity;
 use Spatie\Activitylog\LogOptions;
 
@@ -15,6 +16,7 @@ class WorkOrder extends Model
 
     protected $fillable = [
         'maintenance_request_id',
+        'preventive_maintenance_id',
         'equipment_id',
         'technician_id',
         'wo_number',
@@ -72,5 +74,33 @@ class WorkOrder extends Model
             User::class,
             'technician_id'
         );
+    }
+
+    public function preventiveMaintenance(): BelongsTo
+    {
+        return $this->belongsTo(PreventiveMaintenance::class, 'preventive_maintenance_id');
+    }
+
+    public function sparepartUsages(): HasMany
+    {
+        return $this->hasMany(SparepartUsage::class, 'work_order_id');
+    }
+
+    /**
+     * Format: WO-YYYYMMDD-0001. Panggil di dalam DB::transaction.
+     * Kolom wo_number UNIQUE menjadi pengaman terakhir.
+     */
+    public static function generateNumber(): string
+    {
+        $prefix = 'WO-' . now()->format('Ymd') . '-';
+
+        $last = static::where('wo_number', 'like', $prefix . '%')
+            ->orderByDesc('wo_number')
+            ->lockForUpdate()
+            ->first();
+
+        $sequence = $last ? ((int) substr($last->wo_number, -4)) + 1 : 1;
+
+        return $prefix . str_pad((string) $sequence, 4, '0', STR_PAD_LEFT);
     }
 }
