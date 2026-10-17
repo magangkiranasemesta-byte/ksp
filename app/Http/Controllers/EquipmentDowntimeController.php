@@ -16,12 +16,10 @@ class EquipmentDowntimeController extends Controller
      */
     public function index()
     {
-        $downtimes = EquipmentDowntime::with([
-            'equipment',
-            'creator',
-        ])
+        $downtimes = EquipmentDowntime::with(['equipment', 'creator'])
             ->latest()
-            ->paginate(10);
+            ->paginate(10)
+            ->withQueryString();
 
         $totalDowntime = EquipmentDowntime::count();
 

@@ -401,86 +401,15 @@
             </div>
 
 
-            {{-- Export Area --}}
+            {{-- Reset --}}
 
-            <div class="mt-5 flex flex-col gap-3 border-t border-slate-100 pt-5 sm:flex-row sm:flex-wrap sm:items-center">
+            @if(request()->hasAny([
+                'start_date',
+                'end_date',
+                'status'
+            ]))
 
-                {{-- Export PDF --}}
-
-                <a
-                    href="{{ route('history.export.pdf', request()->query()) }}"
-                    target="_blank"
-                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 active:scale-[0.98]"
-                >
-
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M7 21h10a2 2 0 002-2V9.414a2 2 0 00-.586-1.414l-4.414-4.414A2 2 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
-                        />
-
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M13 3v6h6"
-                        />
-
-                    </svg>
-
-                    Export PDF
-
-                </a>
-
-
-                {{-- Export Excel --}}
-
-                <a
-                    href="{{ route('history.export.excel', request()->query()) }}"
-                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98]"
-                >
-
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        class="h-4 w-4"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                        stroke-width="2"
-                    >
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M4 5a2 2 0 012-2h8l6 6v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"
-                        />
-
-                        <path
-                            stroke-linecap="round"
-                            stroke-linejoin="round"
-                            d="M8 13l2 3 2-3m-4 0h4"
-                        />
-
-                    </svg>
-
-                    Export Excel
-
-                </a>
-
-
-                {{-- Reset --}}
-
-                @if(request()->hasAny([
-                    'start_date',
-                    'end_date',
-                    'status'
-                ]))
+                <div class="mt-5 flex border-t border-slate-100 pt-5">
 
                     <a
                         href="{{ route('history.index') }}"
@@ -506,15 +435,168 @@
 
                     </a>
 
-                @endif
+                </div>
 
-            </div>
+            @endif
 
         </form>
 
     </div>
 
 </div>
+
+
+{{-- ============================================================
+    EXPORT TERPILIH
+    Form terpisah dari form filter (form tidak boleh bersarang).
+    Checkbox di tabel terhubung ke form ini lewat atribut form="history-export-form".
+============================================================= --}}
+
+<form
+    id="history-export-form"
+    method="POST"
+    action="{{ route('history.export.pdf') }}"
+    data-history-export-form
+    class="mb-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm sm:p-5"
+>
+
+    @csrf
+
+    {{-- Filter aktif ikut dikirim agar diterapkan ulang di server --}}
+    @foreach(['start_date', 'end_date', 'status'] as $filterKey)
+        @if(request()->filled($filterKey))
+            <input type="hidden" name="{{ $filterKey }}" value="{{ request($filterKey) }}">
+        @endif
+    @endforeach
+
+    <div class="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+
+        <div class="flex items-start gap-3">
+
+            <span
+                data-selected-badge
+                class="inline-flex h-10 min-w-[2.5rem] items-center justify-center rounded-xl bg-slate-100 px-3 text-base font-bold text-slate-500 transition"
+            >
+                <span data-selected-count>0</span>
+            </span>
+
+            <div>
+
+                <p
+                    class="text-sm font-semibold text-slate-800"
+                    aria-live="polite"
+                    data-selected-label
+                >
+                    Belum ada data dipilih
+                </p>
+
+                <p class="mt-0.5 text-xs text-slate-500">
+                    Pilih semua hanya berlaku untuk
+                    <span class="font-semibold">{{ $history->count() }}</span>
+                    data di halaman ini. Pilihan direset saat pindah halaman.
+                </p>
+
+            </div>
+
+        </div>
+
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-3 lg:flex lg:flex-wrap lg:justify-end">
+
+            <button
+                type="submit"
+                formaction="{{ route('history.export.pdf') }}"
+                data-export-button
+                disabled
+                class="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-red-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-red-600"
+            >
+
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M7 21h10a2 2 0 002-2V9.414a2 2 0 00-.586-1.414l-4.414-4.414A2 2 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                    />
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M13 3v6h6"
+                    />
+                </svg>
+
+                Export PDF Terpilih
+
+            </button>
+
+            <button
+                type="submit"
+                formaction="{{ route('history.export.excel') }}"
+                data-export-button
+                disabled
+                class="inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-emerald-600"
+            >
+
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M4 5a2 2 0 012-2h8l6 6v10a2 2 0 01-2 2H6a2 2 0 01-2-2V5z"
+                    />
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M8 13l2 3 2-3m-4 0h4"
+                    />
+                </svg>
+
+                Export Excel Terpilih
+
+            </button>
+
+            <button
+                type="button"
+                data-clear-selection
+                disabled
+                class="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-white"
+            >
+
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        d="M6 18L18 6M6 6l12 12"
+                    />
+                </svg>
+
+                Hapus Checklist
+
+            </button>
+
+        </div>
+
+    </div>
+
+</form>
 
 
 {{-- ============================================================
@@ -581,6 +663,18 @@
 
                     <th
                         scope="col"
+                        class="w-12 px-4 py-3 text-left sm:px-6"
+                    >
+                        <input
+                            type="checkbox"
+                            data-select-all
+                            aria-label="Pilih semua data di halaman ini"
+                            class="h-5 w-5 cursor-pointer rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-200"
+                        >
+                    </th>
+
+                    <th
+                        scope="col"
                         class="whitespace-nowrap px-5 py-3 text-left text-xs font-bold uppercase tracking-wider text-slate-500 sm:px-6"
                     >
                         ID
@@ -637,7 +731,23 @@
 
                 @forelse($history as $item)
 
-                    <tr class="transition hover:bg-slate-50">
+                    <tr class="transition hover:bg-slate-50" data-history-row>
+
+                        {{-- Checkbox --}}
+
+                        <td class="w-12 px-4 py-4 sm:px-6">
+
+                            <input
+                                type="checkbox"
+                                name="selected_ids[]"
+                                value="{{ $item->id }}"
+                                form="history-export-form"
+                                data-row-checkbox
+                                aria-label="Pilih riwayat maintenance #{{ $item->id }}"
+                                class="h-5 w-5 cursor-pointer rounded border-slate-300 text-blue-600 focus:ring-2 focus:ring-blue-200"
+                            >
+
+                        </td>
 
                         {{-- ID --}}
 
@@ -902,7 +1012,7 @@
                     <tr>
 
                         <td
-                            colspan="7"
+                            colspan="8"
                             class="px-6 py-16 text-center"
                         >
 
@@ -1007,7 +1117,6 @@
     </p>
 
 </div>
-```
 
 </div>
 
@@ -1061,5 +1170,9 @@ AUTO HIDE FLASH MESSAGE
     });
 
 </script>
+
+@push('scripts')
+    <script src="{{ asset('js/history-select.js') }}" defer></script>
+@endpush
 
 @endsection

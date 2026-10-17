@@ -170,6 +170,23 @@
 
         </tr>
 
+        @if(isset($selectedCount))
+
+        <tr>
+
+            <td>
+                <strong>Data</strong>
+            </td>
+
+            <td>
+                :
+                {{ $selectedCount }} data terpilih
+            </td>
+
+        </tr>
+
+        @endif
+
         <tr>
 
             <td>

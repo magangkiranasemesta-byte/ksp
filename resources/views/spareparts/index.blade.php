@@ -3,14 +3,14 @@
 @section('title', 'Manajemen Sparepart')
 
 @section('content')
-<div class="p-6">
+<div class="p-4 sm:p-6">
     <!-- Header -->
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 mb-6">
         <div>
             <h1 class="text-2xl font-bold text-gray-800">Manajemen Sparepart & Suku Cadang</h1>
             <p class="text-gray-500 text-sm">Kelola ketersediaan stok komponen perbaikan.</p>
         </div>
-        <button onclick="document.getElementById('addSparepartModal').classList.remove('hidden')" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium text-sm transition">
+        <button onclick="document.getElementById('addSparepartModal').classList.remove('hidden')" class="bg-blue-600 text-white px-4 py-2.5 rounded-lg hover:bg-blue-700 font-medium text-sm transition">
             + Tambah Sparepart
         </button>
     </div>
@@ -24,48 +24,52 @@
 
     <!-- Tabel Data Sparepart -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        <table class="min-w-full divide-y divide-gray-200 text-sm text-left">
-            <thead class="bg-gray-50 text-gray-600 font-semibold uppercase text-xs">
-                <tr>
-                    <th class="px-6 py-3">Kode</th>
-                    <th class="px-6 py-3">Nama Sparepart</th>
-                    <th class="px-6 py-3">Kategori</th>
-                    <th class="px-6 py-3">Stok</th>
-                    <th class="px-6 py-3">Harga Satuan</th>
-                    <th class="px-6 py-3">Status Stok</th>
-                    <th class="px-6 py-3 text-right">Aksi</th>
-                </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-200">
-                @forelse($spareparts as $item)
-                <tr class="hover:bg-gray-50 transition">
-                    <td class="px-6 py-4 font-mono text-blue-600 font-semibold">{{ $item->code }}</td>
-                    <td class="px-6 py-4 font-medium text-gray-900">{{ $item->name }}</td>
-                    <td class="px-6 py-4 text-gray-500">{{ $item->category ?? '-' }}</td>
-                    <td class="px-6 py-4 font-bold text-gray-800">{{ $item->stock }} {{ $item->unit }}</td>
-                    <td class="px-6 py-4">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
-                    <td class="px-6 py-4">
-                        @if($item->isLowStock())
-                            <span class="bg-red-100 text-red-700 text-xs px-2.5 py-1 rounded-full font-medium">Low Stock</span>
-                        @else
-                            <span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">Aman</span>
-                        @endif
-                    </td>
-                    <td class="px-6 py-4 text-right space-x-2">
-                        <form action="{{ route('spareparts.destroy', $item->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus sparepart ini?')">
-                            @csrf
-                            @method('DELETE')
-                            <button type="submit" class="text-red-600 hover:text-red-900 font-medium">Hapus</button>
-                        </form>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="7" class="text-center py-6 text-gray-400">Belum ada data sparepart.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+        {{-- Scroll horizontal internal: tabel tidak terpotong di layar sempit --}}
+        <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200 text-sm text-left whitespace-nowrap">
+                <thead class="bg-gray-50 text-gray-600 font-semibold uppercase text-xs">
+                    <tr>
+                        <th class="px-6 py-3">Kode</th>
+                        <th class="px-6 py-3">Nama Sparepart</th>
+                        <th class="px-6 py-3">Kategori</th>
+                        <th class="px-6 py-3">Stok</th>
+                        <th class="px-6 py-3">Harga Satuan</th>
+                        <th class="px-6 py-3">Status Stok</th>
+                        <th class="px-6 py-3 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @forelse($spareparts as $item)
+                    <tr class="hover:bg-gray-50 transition">
+                        <td class="px-6 py-4 font-mono text-blue-600 font-semibold">{{ $item->code }}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900">{{ $item->name }}</td>
+                        <td class="px-6 py-4 text-gray-500">{{ $item->category ?? '-' }}</td>
+                        <td class="px-6 py-4 font-bold text-gray-800">{{ $item->stock }} {{ $item->unit }}</td>
+                        <td class="px-6 py-4">Rp {{ number_format($item->price, 0, ',', '.') }}</td>
+                        <td class="px-6 py-4">
+                            @if($item->isLowStock())
+                                <span class="bg-red-100 text-red-700 text-xs px-2.5 py-1 rounded-full font-medium">Low Stock</span>
+                            @else
+                                <span class="bg-green-100 text-green-700 text-xs px-2.5 py-1 rounded-full font-medium">Aman</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-right space-x-2">
+                            <form action="{{ route('spareparts.destroy', $item->id) }}" method="POST" class="inline-block" onsubmit="return confirm('Yakin ingin menghapus sparepart ini?')">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="text-red-600 hover:text-red-900 font-medium px-2 py-2">Hapus</button>
+                            </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="7" class="text-center py-6 text-gray-400">Belum ada data sparepart.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+
         <div class="p-4">
             {{ $spareparts->links() }}
         </div>
@@ -73,8 +77,8 @@
 </div>
 
 <!-- Modal Tambah Sparepart -->
-<div id="addSparepartModal" class="fixed inset-0 bg-black/50 hidden flex justify-center items-center z-50">
-    <div class="bg-white rounded-xl p-6 w-full max-w-md shadow-xl">
+<div id="addSparepartModal" class="fixed inset-0 bg-black/50 hidden flex justify-center items-center z-50 p-4">
+    <div class="bg-white rounded-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-xl">
         <h2 class="text-lg font-bold text-gray-800 mb-4">Tambah Sparepart Baru</h2>
         <form action="{{ route('spareparts.store') }}" method="POST" class="space-y-3">
             @csrf

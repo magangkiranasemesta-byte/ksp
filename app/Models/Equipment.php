@@ -60,4 +60,9 @@ class Equipment extends Model
             ->whereIn('status', ['IN_PROGRESS', 'ON_HOLD'])
             ->latestOfMany();
     }
+
+    public function maintenanceHistories(): HasMany
+    {
+        return $this->hasMany(MaintenanceHistory::class);
+    }
 }

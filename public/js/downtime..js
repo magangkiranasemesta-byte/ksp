@@ -1,250 +1,238 @@
-document.addEventListener('DOMContentLoaded', () => {
 
-    const searchInput =
-        document.getElementById('downtimeSearch');
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('downtimeForm');
 
-    const statusFilter =
-        document.getElementById('statusFilter');
+    if (!form) return;
 
-    const tableBody =
-        document.getElementById('downtimeTableBody');
+    const startInput = document.getElementById('start_time');
+    const endInput = document.getElementById('end_time');
+    const statusSelect = document.getElementById('status');
 
+    const statusInfo = document.getElementById('statusInfo');
+    const statusDescription = document.getElementById('statusDescription');
 
-    /* =====================================================
-       FILTER TABLE
-       ===================================================== */
+    const durationPreview = document.getElementById('durationPreview');
+    const durationValue = document.getElementById('durationValue');
 
-    function filterTable() {
+    const description = document.getElementById('description');
+    const descriptionCount = document.getElementById('descriptionCount');
 
-        const searchValue =
-            searchInput?.value
-                .toLowerCase()
-                .trim() || '';
+    const submitButton = document.getElementById('submitDowntime');
+    const submitButtonText = document.getElementById('submitDowntimeText');
 
-        const statusValue =
-            statusFilter?.value || '';
+    // Format durasi menjadi hari, jam, dan menit.
+    function formatDuration(milliseconds) {
+        const totalMinutes = Math.floor(milliseconds / 60000);
 
-        const rows =
-            tableBody?.querySelectorAll('tr[data-search]') || [];
+        const days = Math.floor(totalMinutes / 1440);
+        const hours = Math.floor((totalMinutes % 1440) / 60);
+        const minutes = totalMinutes % 60;
 
+        const parts = [];
 
-        rows.forEach(row => {
+        if (days > 0) parts.push(`${days} hari`);
+        if (hours > 0) parts.push(`${hours} jam`);
+        if (minutes > 0 || parts.length === 0) {
+            parts.push(`${minutes} menit`);
+        }
 
-            const searchData =
-                row.dataset.search || '';
-
-            const status =
-                row.dataset.status || '';
-
-
-            const matchesSearch =
-                searchData.includes(searchValue);
-
-            const matchesStatus =
-                !statusValue ||
-                status === statusValue;
-
-
-            if (matchesSearch && matchesStatus) {
-
-                row.style.display = '';
-
-            } else {
-
-                row.style.display = 'none';
-
-            }
-
-        });
-
+        return parts.join(' ');
     }
 
+    // Atur batas waktu selesai berdasarkan waktu mulai.
+    function validateTimes() {
+        const start = startInput.value;
+        const end = endInput.value;
 
-    /* =====================================================
-       SEARCH
-       ===================================================== */
+        startInput.setCustomValidity('');
+        endInput.setCustomValidity('');
 
-    searchInput?.addEventListener(
-        'input',
-        filterTable
-    );
+        if (start) {
+            endInput.min = start;
+        } else {
+            endInput.removeAttribute('min');
+        }
 
+        if (start && end && new Date(end) < new Date(start)) {
+            endInput.setCustomValidity(
+                'Waktu selesai tidak boleh lebih awal daripada waktu mulai.'
+            );
+        }
 
-    /* =====================================================
-       STATUS FILTER
-       ===================================================== */
+        updateDuration();
+    }
 
-    statusFilter?.addEventListener(
-        'change',
-        filterTable
-    );
+    // Tampilkan perkiraan durasi jika kedua waktu sudah diisi.
+    function updateDuration() {
+        if (!startInput.value || !endInput.value) {
+            durationPreview.hidden = true;
+            durationValue.textContent = '—';
+            return;
+        }
 
+        const start = new Date(startInput.value);
+        const end = new Date(endInput.value);
+        const difference = end.getTime() - start.getTime();
 
-    /* =====================================================
-       DELETE CONFIRMATION
-       ===================================================== */
+        if (
+            Number.isNaN(start.getTime()) ||
+            Number.isNaN(end.getTime()) ||
+            difference < 0
+        ) {
+            durationPreview.hidden = true;
+            return;
+        }
 
-    const deleteForms =
-        document.querySelectorAll('.delete-form');
+        durationValue.textContent = formatDuration(difference);
+        durationPreview.hidden = false;
+    }
 
+    // Perbarui informasi berdasarkan status.
+    function updateStatusInfo() {
+        const isCompleted = statusSelect.value === 'COMPLETED';
 
-    deleteForms.forEach(form => {
+        statusInfo.classList.toggle('is-completed', isCompleted);
 
-        form.addEventListener('submit', event => {
+        if (isCompleted) {
+            statusDescription.textContent =
+                'Downtime ditandai selesai. Pastikan waktu selesai telah diisi sesuai kondisi aktual.';
+        } else {
+            statusDescription.textContent =
+                'Downtime aktif akan tercatat sebagai gangguan yang masih berlangsung.';
+        }
+    }
 
-            const confirmed =
-                confirm(
-                    'Are you sure you want to delete this downtime record?'
-                );
+    // Hitung jumlah karakter deskripsi.
+    function updateDescriptionCount() {
+        descriptionCount.textContent = description.value.length;
+    }
 
+    startInput.addEventListener('change', validateTimes);
+    endInput.addEventListener('change', validateTimes);
+    startInput.addEventListener('input', validateTimes);
+    endInput.addEventListener('input', validateTimes);
 
-            if (!confirmed) {
+    statusSelect.addEventListener('change', updateStatusInfo);
+    description.addEventListener('input', updateDescriptionCount);
 
-                event.preventDefault();
+    // Inisialisasi sesuai nilai awal form.
+    validateTimes();
+    updateStatusInfo();
+    updateDescriptionCount();
 
-            }
+    // Cegah submit berulang dan validasi sebelum pengiriman.
+    form.addEventListener('submit', function (event) {
+        validateTimes();
 
-        });
+        if (!form.checkValidity()) {
+            event.preventDefault();
+            form.reportValidity();
+            return;
+        }
 
+        if (submitButton.disabled) {
+            event.preventDefault();
+            return;
+        }
+
+        submitButton.disabled = true;
+        submitButtonText.textContent = 'Saving...';
     });
+});
 
 
-    /* =====================================================
-       SORTING
-       ===================================================== */
+/* ==========================================
+   DOWNTIME INDEX — SEARCH, FILTER & SORT
+   ========================================== */
 
-    const sortButtons =
-        document.querySelectorAll('.sort-btn');
+document.addEventListener('DOMContentLoaded', function () {
+    const page = document.querySelector('.downtime-list-page');
+
+    if (!page) return;
+
+    const searchInput = page.querySelector('#downtimeSearch');
+    const statusFilter = page.querySelector('#statusFilter');
+    const tableBody = page.querySelector('#downtimeTableBody');
+    const noResults = page.querySelector('#downtimeNoResults');
+    const resultsInfo = page.querySelector('#downtimeResultsInfo');
+    const sortButton = page.querySelector('[data-sort="equipment"]');
+
+    if (!tableBody) return;
+
+    const rows = Array.from(tableBody.querySelectorAll('tr[data-status]'));
 
     let sortAscending = true;
 
+    function filterRows() {
+        const query = (searchInput?.value || '').trim().toLowerCase();
+        const selectedStatus = (statusFilter?.value || '').toUpperCase();
 
-    sortButtons.forEach(button => {
+        let visibleCount = 0;
 
-        button.addEventListener('click', () => {
+        rows.forEach(function (row) {
+            const searchableText = row.dataset.search || '';
+            const status = (row.dataset.status || '').toUpperCase();
 
-            const sortType =
-                button.dataset.sort;
+            const matchesSearch = searchableText.includes(query);
 
-            if (sortType !== 'equipment') {
-                return;
-            }
-
-
-            const rows =
-                Array.from(
-                    tableBody.querySelectorAll('tr[data-search]')
+            const matchesStatus =
+                !selectedStatus ||
+                status === selectedStatus ||
+                (
+                    selectedStatus === 'ONGOING' &&
+                    status === 'ACTIVE'
                 );
 
+            const visible = matchesSearch && matchesStatus;
 
-            rows.sort((a, b) => {
+            row.hidden = !visible;
 
-                const equipmentA =
-                    a
-                        .querySelector('.equipment-info strong')
-                        ?.textContent
-                        .trim()
-                        .toLowerCase() || '';
-
-                const equipmentB =
-                    b
-                        .querySelector('.equipment-info strong')
-                        ?.textContent
-                        .trim()
-                        .toLowerCase() || '';
-
-
-                return sortAscending
-                    ? equipmentA.localeCompare(equipmentB)
-                    : equipmentB.localeCompare(equipmentA);
-
-            });
-
-
-            rows.forEach(row => {
-                tableBody.appendChild(row);
-            });
-
-
-            sortAscending = !sortAscending;
-
+            if (visible) visibleCount++;
         });
 
+        if (noResults) {
+            noResults.hidden = visibleCount !== 0;
+        }
+
+        if (resultsInfo) {
+            if (query || selectedStatus) {
+                resultsInfo.textContent =
+                    `Showing ${visibleCount} matching record${visibleCount === 1 ? '' : 's'} on this page`;
+            } else {
+                resultsInfo.textContent =
+                    `Showing ${rows.length} record${rows.length === 1 ? '' : 's'} on this page`;
+            }
+        }
     }
-    )
+
+    searchInput?.addEventListener('input', filterRows);
+    statusFilter?.addEventListener('change', filterRows);
+
+    sortButton?.addEventListener('click', function () {
+        sortAscending = !sortAscending;
+
+        const sortedRows = [...rows].sort(function (a, b) {
+            const first = a.dataset.equipment || '';
+            const second = b.dataset.equipment || '';
+
+            return sortAscending
+                ? first.localeCompare(second)
+                : second.localeCompare(first);
+        });
+
+        sortedRows.forEach(function (row) {
+            tableBody.insertBefore(row, noResults);
+        });
+
+        const directionIcon = sortButton.querySelector('span');
+
+        if (directionIcon) {
+            directionIcon.textContent = sortAscending ? '↑' : '↓';
+        }
+
+        filterRows();
+    });
+
+    filterRows();
 });
-
-/* =========================================================
-CREATE DOWNTIME FORM
-========================================================= */
-
-const downtimeForm =
-document.getElementById('downtimeForm');
-
-const startTimeInput =
-document.getElementById('start_time');
-
-const endTimeInput =
-document.getElementById('end_time');
-
-const submitButton =
-document.getElementById('submitDowntime');
-
-/* =========================================================
-VALIDATE DATE
-========================================================= */
-
-if (downtimeForm) {
-
-
-downtimeForm.addEventListener('submit', event => {
-
-    const startTime =
-        startTimeInput?.value;
-
-    const endTime =
-        endTimeInput?.value;
-
-
-    /*
-     * End time tidak boleh lebih awal
-     * dari start time.
-     */
-
-    if (
-        startTime &&
-        endTime &&
-        new Date(endTime) < new Date(startTime)
-    ) {
-
-        event.preventDefault();
-
-        alert(
-            'End Downtime cannot be earlier than Start Downtime.'
-        );
-
-        endTimeInput.focus();
-
-        return;
-    }
-
-
-    /*
-     * Disable button setelah submit
-     * supaya tidak terjadi double submit.
-     */
-
-    if (submitButton) {
-
-        submitButton.disabled = true;
-
-        submitButton.textContent =
-            'Creating...';
-
-    }
-
-});
-
-}
-
 

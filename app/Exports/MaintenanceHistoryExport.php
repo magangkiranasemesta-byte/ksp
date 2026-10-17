@@ -22,14 +22,21 @@ class MaintenanceHistoryExport implements
     protected $endDate;
     protected $status;
 
+    /**
+     * ID yang dipilih. null = tanpa pembatasan ID, array kosong = tidak ada data.
+     */
+    protected ?array $selectedIds;
+
     public function __construct(
         $startDate = null,
         $endDate = null,
-        $status = null
+        $status = null,
+        ?array $selectedIds = null
     ) {
         $this->startDate = $startDate;
         $this->endDate = $endDate;
         $this->status = $status;
+        $this->selectedIds = $selectedIds;
     }
 
     /**
@@ -41,44 +48,21 @@ class MaintenanceHistoryExport implements
             'equipment',
             'engineer'
         ])
-        ->whereIn('status', [
-            'REJECTED',
-            'APPROVED',
-            'IN_PROGRESS',
-            'COMPLETED'
-        ]);
+        ->forHistory()
+        ->filterHistory(
+            $this->startDate,
+            $this->endDate,
+            $this->status
+        );
 
-        // Filter tanggal mulai
-        if ($this->startDate) {
-            $query->whereDate(
-                'created_at',
-                '>=',
-                $this->startDate
-            );
-        }
-
-        // Filter tanggal akhir
-        if ($this->endDate) {
-            $query->whereDate(
-                'created_at',
-                '<=',
-                $this->endDate
-            );
-        }
-
-        // Filter status
-        if (
-            $this->status &&
-            strtoupper($this->status) !== 'ALL'
-        ) {
-            $query->where(
-                'status',
-                strtoupper($this->status)
-            );
+        // Batasi hanya ID yang dipilih
+        if ($this->selectedIds !== null) {
+            $query->whereIn('id', $this->selectedIds);
         }
 
         return $query
             ->latest()
+            ->orderByDesc('id')
             ->get();
     }
 

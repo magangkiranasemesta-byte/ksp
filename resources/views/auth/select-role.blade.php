@@ -25,7 +25,7 @@
         <form method="POST" action="{{ route('logout') }}" class="inline-flex">
             @csrf
             <button type="submit" 
-                    class="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-400 to-rose-400 hover:from-red-500 hover:to-rose-500 text-white font-semibold text-xs tracking-wide shadow-lg shadow-red-900/40 transition-all duration-200 hover:scale-105 border border-red-400/30 cursor-pointer">
+                    class="inline-flex items-center gap-2.5 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-400 to-rose-400 hover:from-red-500 hover:to-rose-500 text-blue font-semibold text-xs tracking-wide shadow-lg shadow-red-900/40 transition-all duration-200 hover:scale-105 border border-red-400/30 cursor-pointer">
                 <i class="fa-solid fa-right-from-bracket text-sm"></i>
                 <span>Logout & Kembali ke Login</span>
                 <i class="fa-solid fa-chevron-right text-[10px] opacity-70"></i>

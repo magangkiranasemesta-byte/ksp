@@ -328,12 +328,14 @@ Route::middleware('auth')->group(function () {
                 [MaintenanceController::class, 'history']
             )->name('index');
 
-            Route::get(
+            Route::match(
+                ['GET', 'POST'],
                 '/export/pdf',
                 [MaintenanceController::class, 'exportPdf']
             )->name('export.pdf');
 
-            Route::get(
+            Route::match(
+                ['GET', 'POST'],
                 '/export/excel',
                 [MaintenanceController::class, 'exportExcel']
             )->name('export.excel');
